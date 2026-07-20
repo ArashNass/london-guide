@@ -78,21 +78,31 @@ def valid_image(content_type: str, data: bytes) -> bool:
     return len(data) >= 1500 and bool(extension(content_type, data))
 
 
+def original_google_image_url(response: Response) -> str | None:
+    request = response.request
+    while request is not None:
+        if "sites.google.com/sitesv-images-rt/" in request.url:
+            return request.url
+        request = request.redirected_from
+    if "sites.google.com/sitesv-images-rt/" in response.url:
+        return response.url
+    return None
+
+
 async def collect_response(
     response: Response,
     captured: dict[str, tuple[bytes, str]],
 ) -> None:
-    if "sites.google.com/sitesv-images-rt/" not in response.url:
+    source_url = original_google_image_url(response)
+    if source_url is None or response.status != 200:
         return
     try:
-        if response.status != 200:
-            return
         headers = await response.all_headers()
         content_type = headers.get("content-type", "")
         data = await response.body()
         if not valid_image(content_type, data):
             return
-        key = image_key(response.url)
+        key = image_key(source_url)
         existing = captured.get(key)
         if existing is None or len(data) > len(existing[0]):
             captured[key] = (data, content_type)

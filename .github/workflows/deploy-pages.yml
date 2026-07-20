@@ -37,14 +37,13 @@ jobs:
           test -f _site/assets/site.css
           test -f _site/assets/site.js
 
-      - name: Create reliable local visuals
+      - name: Enable real venue photos
         run: |
           python scripts/cache_google_site_images.py _site
-          IMAGE_COUNT="$(find _site/assets/images -type f -name 'place-*.svg' | wc -l | tr -d ' ')"
-          echo "Verified local visual count: ${IMAGE_COUNT}"
-          test "${IMAGE_COUNT}" -ge 50
-          ! grep -R "sites.google.com/sitesv-images-rt" _site --include='*.html' --include='*.js' --include='*.css'
-          grep -R "/assets/images/place-" _site --include='*.html' --include='*.js' --include='*.css' >/dev/null
+          test -f _site/assets/photo-loader.js
+          grep -R "/assets/photo-loader.js" _site --include='*.html' >/dev/null
+          test "$(find _site -type f -name 'place-*.svg' | wc -l | tr -d ' ')" -eq 0
+          grep -R "sites.google.com/sitesv-images-rt" _site --include='*.js' >/dev/null
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

@@ -37,7 +37,8 @@
         if (!("DecompressionStream" in window)) throw new Error("Browser unsupported");
         const bytes = Uint8Array.from(atob(window.__LONDON_PAYLOAD || ""), character => character.charCodeAt(0));
         const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
-        const html = await new Response(stream).text();
+        let html = await new Response(stream).text();
+        html = html.replace("</body>", '<script src="photos.js"><\/script></body>');
         document.open();
         document.write(html);
         document.close();

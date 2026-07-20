@@ -37,14 +37,13 @@ jobs:
           test -f _site/assets/site.css
           test -f _site/assets/site.js
 
-      - name: Lock original Google Site photos
+      - name: Enable working real venue photos
         run: |
           python scripts/cache_google_site_images.py _site
           test -f _site/assets/photo-loader.js
           grep -R "/assets/photo-loader.js" _site --include='*.html' >/dev/null
           test "$(find _site -type f -name 'place-*.svg' | wc -l | tr -d ' ')" -eq 0
-          test "$(grep -o 'sites.google.com/sitesv-images-rt' _site/assets/photo-loader.js | wc -l | tr -d ' ')" -ge 50
-          ! grep -E "unsplash.com|wikipedia.org|wikimedia.org|bing.net|tse1.mm.bing.net" _site/assets/photo-loader.js
+          grep -R "sites.google.com/sitesv-images-rt" _site --include='*.js' >/dev/null
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

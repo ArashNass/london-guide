@@ -45,10 +45,11 @@ jobs:
       - name: Add direct F1 photo
         run: |
           mkdir -p _site/images
-          cp images/f1-exhibition.jpg _site/images/f1-exhibition.jpg
+          base64 --decode images/f1-exhibition.webp > _site/images/f1-exhibition.webp
           cp direct-image-test.js _site/direct-image-test.js
           find _site -type f -name '*.html' -exec sed -i 's#</body>#<script src="/direct-image-test.js"></script></body>#' {} +
-          test -f _site/images/f1-exhibition.jpg
+          test -s _site/images/f1-exhibition.webp
+          file _site/images/f1-exhibition.webp | grep -q 'Web/P image'
           test -f _site/direct-image-test.js
 
       - name: Configure Pages

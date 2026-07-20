@@ -9,7 +9,7 @@ import sys
 import urllib.parse
 from pathlib import Path
 
-from playwright.async_api import BrowserContext, Response, async_playwright
+from playwright.async_api import APIResponse, BrowserContext, Response, async_playwright
 
 ROOT = Path(sys.argv[1] if len(sys.argv) > 1 else "_site").resolve()
 IMAGE_DIR = ROOT / "assets" / "images"
@@ -17,6 +17,12 @@ IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 TEXT_SUFFIXES = {".html", ".htm", ".js", ".css", ".json", ".txt"}
 URL_RE = re.compile(r"https://sites\.google\.com/sitesv-images-rt/[A-Za-z0-9_~%?=&./+\-]+")
+GOOGLE_IMAGE_HOST_RE = re.compile(
+    r"(?:^|\.)(?:googleusercontent\.com|ggpht\.com)$", re.IGNORECASE
+)
+SIZE_SUFFIX_RE = re.compile(
+    r"=(?:w|h|s)\d+(?:-[a-z0-9-]+)*(?:-rw)?$", re.IGNORECASE
+)
 SITE_PAGES = [
     "https://sites.google.com/view/must-visit-london/home?read_current=1",
     "https://sites.google.com/view/must-visit-london/food-for-your-soul?read_current=1",
@@ -46,12 +52,19 @@ def find_urls(files: list[Path]) -> list[str]:
 
 def image_key(url: str) -> str:
     decoded = urllib.parse.unquote(url)
+    parsed = urllib.parse.urlsplit(decoded)
     marker = "/sitesv-images-rt/"
-    if marker not in decoded:
-        return decoded
-    token = decoded.split(marker, 1)[1]
-    token = re.sub(r"=(?:w|h)\d+(?:-[a-z0-9-]+)?$", "", token, flags=re.IGNORECASE)
-    return token
+
+    if marker in parsed.path:
+        token = parsed.path.split(marker, 1)[1]
+    elif GOOGLE_IMAGE_HOST_RE.search(parsed.hostname or ""):
+        token = parsed.path.lstrip("/")
+    else:
+        return ""
+
+    token = urllib.parse.unquote(token)
+    token = SIZE_SUFFIX_RE.sub("", token)
+    return token.strip()
 
 
 def extension(content_type: str, data: bytes) -> str:
@@ -78,23 +91,28 @@ def valid_image(content_type: str, data: bytes) -> bool:
     return len(data) >= 1500 and bool(extension(content_type, data))
 
 
-def original_google_image_url(response: Response) -> str | None:
+def response_key(response: Response) -> str:
+    key = image_key(response.url)
+    if key:
+        return key
+
     request = response.request
     while request is not None:
-        if "sites.google.com/sitesv-images-rt/" in request.url:
-            return request.url
+        key = image_key(request.url)
+        if key:
+            return key
         request = request.redirected_from
-    if "sites.google.com/sitesv-images-rt/" in response.url:
-        return response.url
-    return None
+    return ""
 
 
 async def collect_response(
     response: Response,
     captured: dict[str, tuple[bytes, str]],
 ) -> None:
-    source_url = original_google_image_url(response)
-    if source_url is None or response.status != 200:
+    if response.status != 200:
+        return
+    key = response_key(response)
+    if not key:
         return
     try:
         headers = await response.all_headers()
@@ -102,38 +120,99 @@ async def collect_response(
         data = await response.body()
         if not valid_image(content_type, data):
             return
-        key = image_key(source_url)
         existing = captured.get(key)
         if existing is None or len(data) > len(existing[0]):
             captured[key] = (data, content_type)
     except Exception as exc:  # noqa: BLE001
-        print(f"Response capture warning: {response.url[:100]}: {exc}", file=sys.stderr)
+        print(f"Response capture warning: {response.url[:120]}: {exc}", file=sys.stderr)
 
 
 async def scroll_page(page) -> None:
-    stable_rounds = 0
     previous_height = 0
-    for _ in range(80):
+    stable_rounds = 0
+    for _ in range(100):
         height = await page.evaluate("document.documentElement.scrollHeight")
-        await page.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)")
-        await page.wait_for_timeout(450)
-        if height == previous_height:
+        await page.evaluate(
+            "window.scrollBy(0, Math.max(window.innerHeight * 0.85, 700))"
+        )
+        await page.wait_for_timeout(300)
+        bottom = await page.evaluate(
+            "window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4"
+        )
+        if height == previous_height and bottom:
             stable_rounds += 1
         else:
             stable_rounds = 0
         previous_height = height
-        if stable_rounds >= 4:
+        if stable_rounds >= 5:
             break
+    await page.evaluate("window.scrollTo(0, 0)")
+    await page.wait_for_timeout(500)
 
 
-async def fetch_missing_with_context(
+async def dom_image_urls(page) -> list[str]:
+    return await page.evaluate(
+        r"""
+        () => {
+          const urls = new Set();
+          const add = value => {
+            if (!value || typeof value !== 'string') return;
+            if (/^https:\/\//i.test(value)) urls.add(value);
+          };
+          document.querySelectorAll('img').forEach(img => {
+            add(img.currentSrc);
+            add(img.src);
+            add(img.getAttribute('data-src'));
+            add(img.getAttribute('data-lazy-src'));
+            if (img.srcset) {
+              img.srcset.split(',').forEach(part => add(part.trim().split(/\s+/)[0]));
+            }
+          });
+          document.querySelectorAll('*').forEach(el => {
+            const bg = getComputedStyle(el).backgroundImage;
+            if (!bg || bg === 'none') return;
+            for (const match of bg.matchAll(/url\(["']?(https:\/\/[^"')]+)["']?\)/g)) {
+              add(match[1]);
+            }
+          });
+          return [...urls];
+        }
+        """
+    )
+
+
+async def store_api_response(
+    response: APIResponse,
+    source_url: str,
+    captured: dict[str, tuple[bytes, str]],
+) -> bool:
+    if not response.ok:
+        return False
+    data = await response.body()
+    content_type = response.headers.get("content-type", "")
+    if not valid_image(content_type, data):
+        return False
+    key = image_key(source_url) or image_key(response.url)
+    if not key:
+        return False
+    existing = captured.get(key)
+    if existing is None or len(data) > len(existing[0]):
+        captured[key] = (data, content_type)
+    return True
+
+
+async def fetch_urls_with_context(
     context: BrowserContext,
-    target_urls: list[str],
+    urls: list[str],
     captured: dict[str, tuple[bytes, str]],
 ) -> None:
-    for url in target_urls:
+    seen: set[str] = set()
+    for url in urls:
+        if url in seen:
+            continue
+        seen.add(url)
         key = image_key(url)
-        if key in captured:
+        if key and key in captured:
             continue
         for referer in SITE_PAGES:
             try:
@@ -144,13 +223,9 @@ async def fetch_missing_with_context(
                         "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
                     },
                     timeout=60_000,
+                    fail_on_status_code=False,
                 )
-                if not response.ok:
-                    continue
-                data = await response.body()
-                content_type = response.headers.get("content-type", "")
-                if valid_image(content_type, data):
-                    captured[key] = (data, content_type)
+                if await store_api_response(response, url, captured):
                     break
             except Exception:
                 continue
@@ -159,6 +234,7 @@ async def fetch_missing_with_context(
 async def capture_images(target_urls: list[str]) -> dict[str, tuple[bytes, str]]:
     captured: dict[str, tuple[bytes, str]] = {}
     pending_tasks: set[asyncio.Task] = set()
+    discovered_urls: set[str] = set()
 
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
@@ -191,14 +267,22 @@ async def capture_images(target_urls: list[str]) -> dict[str, tuple[bytes, str]]
                     await button.first.click(timeout=3_000)
             except Exception:
                 pass
+
             await scroll_page(page)
-            await page.wait_for_timeout(3_000)
+            await page.wait_for_timeout(2_000)
+            discovered_urls.update(await dom_image_urls(page))
+
+            if pending_tasks:
+                await asyncio.gather(*list(pending_tasks), return_exceptions=True)
+                pending_tasks.clear()
             await page.close()
 
-        if pending_tasks:
-            await asyncio.gather(*list(pending_tasks), return_exceptions=True)
-
-        await fetch_missing_with_context(context, target_urls, captured)
+        print(
+            f"Captured {len(captured)} image keys from page traffic; "
+            f"discovered {len(discovered_urls)} DOM image URLs"
+        )
+        await fetch_urls_with_context(context, sorted(discovered_urls), captured)
+        await fetch_urls_with_context(context, target_urls, captured)
         await browser.close()
 
     return captured
@@ -232,7 +316,7 @@ async def main() -> None:
     if missing:
         print("\nMissing Google Site images:", file=sys.stderr)
         for url in missing:
-            print(url, file=sys.stderr)
+            print(f"{image_key(url)}\n  {url}", file=sys.stderr)
         raise SystemExit(
             f"Refusing to publish: captured {len(replacements)}/{len(urls)} images"
         )

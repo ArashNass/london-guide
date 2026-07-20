@@ -37,7 +37,12 @@ jobs:
           test -f _site/assets/site.css
           test -f _site/assets/site.js
 
-      - name: Download original Google Site photos
+      - name: Install Chromium image capture
+        run: |
+          python -m pip install --disable-pip-version-check playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Capture original Google Site photos
         run: |
           python scripts/cache_google_site_images.py _site
           IMAGE_COUNT="$(find _site/assets/images -type f -name 'place-*' | wc -l | tr -d ' ')"

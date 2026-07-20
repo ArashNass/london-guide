@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -9,240 +10,177 @@ ROOT = Path(sys.argv[1] if len(sys.argv) > 1 else "_site").resolve()
 ASSETS = ROOT / "assets"
 ASSETS.mkdir(parents=True, exist_ok=True)
 
-PHOTO_LOADER = r'''(() => {
-  const items = window.LONDON_DATA || [];
-  const byName = new Map(items.map(item => [normalise(item.name), item]));
-  const memory = new Map();
-  const STORAGE_KEY = "london-real-photo-cache-v3";
-  let stored = {};
-  try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); } catch (_) {}
+PREFERRED = {
+    "explore": "va-museum",
+    "views": "horizon-22",
+    "shop": "coal-drops-yard",
+    "breakfast": "granger-and-co",
+    "eat": "circolo-popolare",
+    "pubs": "spaniards-inn",
+}
 
-  const categoryFallbacks = {
-    explore: "https://images.unsplash.com/photo-1564399579883-451a5d44ec08?auto=format&fit=crop&w=1600&q=86",
-    views: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1600&q=86",
-    shop: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1600&q=86",
-    breakfast: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1600&q=86",
-    eat: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=86",
-    pubs: "https://images.unsplash.com/photo-1572116469696-31de0f17cc34?auto=format&fit=crop&w=1600&q=86",
-    apps: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=1600&q=86"
-  };
 
-  function normalise(value) {
-    return String(value || "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, " ")
-      .trim();
-  }
+def load_data() -> list[dict]:
+    data_file = ASSETS / "data.min.js"
+    text = data_file.read_text(encoding="utf-8")
+    match = re.search(r"window\.LONDON_DATA\s*=\s*(\[.*\])\s*;?\s*$", text, re.S)
+    if not match:
+        raise SystemExit("Could not parse assets/data.min.js")
+    return json.loads(match.group(1))
 
-  function itemFor(image) {
+
+def make_loader(items: list[dict]) -> str:
+    by_id = {item.get("id"): item for item in items}
+    category_images: dict[str, str] = {}
+    for category, item_id in PREFERRED.items():
+        item = by_id.get(item_id)
+        if not item or not item.get("image"):
+            raise SystemExit(f"Missing preferred photo for {category}: {item_id}")
+        category_images[category] = item["image"]
+
+    item_images = {
+        item["name"]: item["image"]
+        for item in items
+        if item.get("name") and item.get("image")
+    }
+
+    return f'''(() => {{
+  const itemImages = {json.dumps(item_images, ensure_ascii=False, separators=(",", ":"))};
+  const categoryImages = {json.dumps(category_images, ensure_ascii=False, separators=(",", ":"))};
+  const normalise = value => String(value || "").toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  const byName = new Map(Object.entries(itemImages).map(([name, url]) => [normalise(name), url]));
+
+  function directGoogleUrl(url) {{
+    const marker = "https://sites.google.com/sitesv-images-rt/";
+    if (!url || !url.startsWith(marker)) return url || "";
+    try {{ return "https://lh3.googleusercontent.com/" + decodeURIComponent(url.slice(marker.length)); }}
+    catch (_) {{ return url; }}
+  }}
+
+  function categoryFromHref(href) {{
+    const value = String(href || "");
+    if (value.includes("/explore") || value === "explore/") return "explore";
+    if (value.includes("/views") || value === "views/") return "views";
+    if (value.includes("/shopping") || value === "shopping/") return "shop";
+    if (value.includes("/breakfast") || value === "breakfast/") return "breakfast";
+    if (value.includes("/restaurants") || value === "restaurants/") return "eat";
+    if (value.includes("/pubs") || value === "pubs/") return "pubs";
+    return "";
+  }}
+
+  function exactOriginal(image) {{
     const alt = normalise(image.alt);
     if (byName.has(alt)) return byName.get(alt);
-    for (const [key, item] of byName) {
-      if (alt && (key.includes(alt) || alt.includes(key))) return item;
-    }
-    const path = image.closest("a")?.getAttribute("href") || "";
-    const category = Object.keys(categoryFallbacks).find(key => path.includes(key));
-    return { id: `section-${alt || category || "london"}`, name: image.alt || "London", category: category || "explore", area: "London" };
-  }
+    for (const [name, url] of byName) {{
+      if (alt && (name.includes(alt) || alt.includes(name))) return url;
+    }}
+    const tile = image.closest("a.category-tile");
+    if (tile) return categoryImages[categoryFromHref(tile.getAttribute("href"))] || image.src;
+    return image.getAttribute("src") || image.src;
+  }}
 
-  function directGoogleUrl(url) {
-    const marker = "https://sites.google.com/sitesv-images-rt/";
-    if (!url.startsWith(marker)) return null;
-    try {
-      return "https://lh3.googleusercontent.com/" + decodeURIComponent(url.slice(marker.length));
-    } catch (_) {
-      return null;
-    }
-  }
-
-  function testImage(url, timeout = 7000) {
-    return new Promise(resolve => {
-      if (!url) return resolve(null);
-      const probe = new Image();
-      let settled = false;
-      const finish = value => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        probe.onload = probe.onerror = null;
-        resolve(value);
-      };
-      probe.referrerPolicy = "no-referrer";
-      probe.onload = () => finish(probe.naturalWidth >= 220 && probe.naturalHeight >= 140 ? url : null);
-      probe.onerror = () => finish(null);
-      const timer = setTimeout(() => finish(null), timeout);
-      probe.src = url;
-    });
-  }
-
-  function scoreTitle(title, item) {
-    const haystack = normalise(title);
-    const tokens = normalise(item.name).split(" ").filter(token => token.length > 2 && !["the", "and", "london"].includes(token));
-    let score = 0;
-    for (const token of tokens) if (haystack.includes(token)) score += 5;
-    if (haystack.includes(normalise(item.name))) score += 30;
-    if (item.area && haystack.includes(normalise(item.area))) score += 4;
-    if (/logo|map|diagram|poster|menu|ticket/.test(haystack)) score -= 12;
-    return score;
-  }
-
-  async function wikipediaCandidate(item) {
-    const endpoint = new URL("https://en.wikipedia.org/w/api.php");
-    Object.entries({
-      action: "query",
-      generator: "search",
-      gsrsearch: `\"${item.name}\" London`,
-      gsrlimit: "8",
-      prop: "pageimages",
-      piprop: "thumbnail|name",
-      pithumbsize: "1600",
-      format: "json",
-      origin: "*"
-    }).forEach(([key, value]) => endpoint.searchParams.set(key, value));
-    try {
-      const response = await fetch(endpoint, { mode: "cors" });
-      if (!response.ok) return null;
-      const pages = Object.values((await response.json()).query?.pages || {});
-      pages.sort((a, b) => scoreTitle(b.title, item) - scoreTitle(a.title, item));
-      return pages.find(page => page.thumbnail?.source && scoreTitle(page.title, item) >= 5)?.thumbnail?.source || null;
-    } catch (_) { return null; }
-  }
-
-  async function commonsCandidate(item) {
-    const endpoint = new URL("https://commons.wikimedia.org/w/api.php");
-    Object.entries({
-      action: "query",
-      generator: "search",
-      gsrsearch: `\"${item.name}\" ${item.area || ""} London`,
-      gsrnamespace: "6",
-      gsrlimit: "12",
-      prop: "imageinfo",
-      iiprop: "url",
-      iiurlwidth: "1600",
-      format: "json",
-      origin: "*"
-    }).forEach(([key, value]) => endpoint.searchParams.set(key, value));
-    try {
-      const response = await fetch(endpoint, { mode: "cors" });
-      if (!response.ok) return null;
-      const pages = Object.values((await response.json()).query?.pages || {});
-      pages.sort((a, b) => scoreTitle(b.title, item) - scoreTitle(a.title, item));
-      const page = pages.find(candidate => candidate.imageinfo?.[0] && scoreTitle(candidate.title, item) >= 5);
-      return page?.imageinfo?.[0]?.thumburl || page?.imageinfo?.[0]?.url || null;
-    } catch (_) { return null; }
-  }
-
-  async function resolvePhoto(item, original) {
-    const key = item.id || normalise(item.name);
-    if (stored[key]) {
-      const cached = await testImage(stored[key], 3500);
-      if (cached) return cached;
-      delete stored[key];
-    }
-    if (memory.has(key)) return memory.get(key);
-    const task = (async () => {
-      const direct = await testImage(directGoogleUrl(original), 5000);
-      if (direct) return direct;
-      const wiki = await testImage(await wikipediaCandidate(item));
-      if (wiki) return wiki;
-      const commons = await testImage(await commonsCandidate(item));
-      if (commons) return commons;
-      const bing = `https://tse1.mm.bing.net/th?q=${encodeURIComponent(`${item.name} ${item.area || ""} London`)}&w=1200&h=800&c=7&rs=1&p=0`;
-      const searched = await testImage(bing, 6500);
-      if (searched) return searched;
-      return categoryFallbacks[item.category] || categoryFallbacks.explore;
-    })();
-    memory.set(key, task);
-    const result = await task;
-    stored[key] = result;
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(stored)); } catch (_) {}
-    return result;
-  }
-
-  function reveal(image) {
+  function show(image) {{
+    image.classList.remove("photo-pending", "photo-unavailable");
     image.classList.add("photo-loaded");
-  }
+  }}
 
-  async function upgrade(image) {
-    if (image.dataset.photoUpgrade === "working" || image.dataset.photoUpgrade === "done") return;
-    image.dataset.photoUpgrade = "working";
-    const item = itemFor(image);
-    const original = image.currentSrc || image.src;
-    const replacement = await resolvePhoto(item, original);
-    image.onload = () => { image.dataset.photoUpgrade = "done"; reveal(image); };
-    image.onerror = () => {
-      image.dataset.photoUpgrade = "done";
-      image.src = categoryFallbacks[item.category] || categoryFallbacks.explore;
-    };
+  function unavailable(image) {{
+    image.classList.remove("photo-pending");
+    image.classList.add("photo-unavailable");
+    image.removeAttribute("src");
+    image.closest(".card-media,.modal-media,.category-tile")?.classList.add("has-no-photo");
+  }}
+
+  function forceOwnPhoto(image) {{
+    if (!(image instanceof HTMLImageElement) || image.dataset.ownPhoto === "1") return;
+    image.dataset.ownPhoto = "1";
+    image.classList.add("photo-pending");
     image.referrerPolicy = "no-referrer";
-    image.src = replacement;
-  }
+    const original = exactOriginal(image);
+    const direct = directGoogleUrl(original);
+    let stage = 0;
 
-  function prepare(image) {
-    if (!(image instanceof HTMLImageElement) || image.dataset.photoPrepared === "1") return;
-    image.dataset.photoPrepared = "1";
-    image.referrerPolicy = "no-referrer";
-    image.addEventListener("load", () => reveal(image), { once: true });
-    image.addEventListener("error", () => upgrade(image), { once: true });
-    if (image.complete && image.naturalWidth > 0) reveal(image);
-    setTimeout(() => {
-      if (!image.classList.contains("photo-loaded") && (!image.complete || image.naturalWidth < 220)) upgrade(image);
-    }, 2600);
-  }
+    image.onload = () => {{
+      if (image.naturalWidth >= 200 && image.naturalHeight >= 120) show(image);
+      else image.onerror();
+    }};
+    image.onerror = () => {{
+      stage += 1;
+      if (stage === 1 && direct && image.src !== direct) {{
+        image.src = direct;
+        return;
+      }}
+      if (stage === 1 && original && image.src !== original) {{
+        image.src = original;
+        return;
+      }}
+      unavailable(image);
+    }};
 
-  function scan(root = document) {
-    root.querySelectorAll?.(".card-media img, .modal-media img, .category-card img, main img").forEach(prepare);
-  }
+    image.alt = image.alt || image.closest(".category-tile")?.querySelector("h2")?.textContent || "London";
+    image.src = original;
+    setTimeout(() => {{
+      if (!image.classList.contains("photo-loaded") && !image.classList.contains("photo-unavailable")) image.onerror();
+    }}, 7000);
+  }}
 
-  const observer = new MutationObserver(records => {
-    for (const record of records) for (const node of record.addedNodes) {
-      if (node.nodeType === 1) {
-        if (node.matches?.("img")) prepare(node);
-        scan(node);
-      }
-    }
-  });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  function scan(root = document) {{
+    root.querySelectorAll?.(".card-media img,.modal-media img,.category-tile img").forEach(forceOwnPhoto);
+  }}
+
+  new MutationObserver(records => {{
+    for (const record of records) for (const node of record.addedNodes) {{
+      if (node.nodeType !== 1) continue;
+      if (node.matches?.("img")) forceOwnPhoto(node);
+      scan(node);
+    }}
+  }}).observe(document.documentElement, {{ childList: true, subtree: true }});
+
   scan();
-})();
+}})();
 '''
+
 
 STYLE_PATCH = r'''
-.card-media,.modal-media,.category-card{background:#e9e4db}
-.card-media img,.modal-media img,.category-card img,main img{opacity:0;transition:opacity .28s ease}
-.card-media img.photo-loaded,.modal-media img.photo-loaded,.category-card img.photo-loaded,main img.photo-loaded{opacity:1}
+/* own-google-photos-only */
+.card-media,.modal-media,.category-tile{background:#eee9e1}
+.card-media img,.modal-media img,.category-tile img{opacity:0;transition:opacity .25s ease}
+.card-media img.photo-loaded,.modal-media img.photo-loaded,.category-tile img.photo-loaded{opacity:1}
+.card-media.has-no-photo,.modal-media.has-no-photo{display:none}
+.category-tile.has-no-photo{background:#e7e1d7}
+.category-tile.has-no-photo img{display:none}
 '''
 
 
-def inject_script(path: Path) -> None:
-    text = path.read_text(encoding="utf-8")
-    if "/assets/photo-loader.js" in text:
-        return
+def inject_script(page: Path) -> None:
+    text = page.read_text(encoding="utf-8")
+    text = re.sub(r'<script src="/assets/photo-loader\.js"></script>', "", text)
     script = '<script src="/assets/photo-loader.js"></script>'
-    text, count = re.subn(r"</body>", script + "</body>", text, count=1, flags=re.IGNORECASE)
+    text, count = re.subn(r"</body>", script + "</body>", text, count=1, flags=re.I)
     if count != 1:
-        raise SystemExit(f"Could not inject photo loader into {path.relative_to(ROOT)}")
-    path.write_text(text, encoding="utf-8")
+        raise SystemExit(f"Could not inject photo loader into {page.relative_to(ROOT)}")
+    page.write_text(text, encoding="utf-8")
 
 
 def main() -> None:
+    items = load_data()
+    loader = make_loader(items)
+    forbidden = ("unsplash.com", "wikipedia.org", "wikimedia.org", "bing.net", "tse1.mm.bing.net")
+    if any(value in loader for value in forbidden):
+        raise SystemExit("External fallback source remained in photo loader")
+
     images = ASSETS / "images"
     if images.exists():
         for old in images.glob("place-*.svg"):
             old.unlink()
-        if not any(images.iterdir()):
-            images.rmdir()
 
-    (ASSETS / "photo-loader.js").write_text(PHOTO_LOADER, encoding="utf-8")
+    (ASSETS / "photo-loader.js").write_text(loader, encoding="utf-8")
 
     css = ASSETS / "site.css"
-    if css.exists():
-        text = css.read_text(encoding="utf-8")
-        marker = "/* real-photo-loader */"
-        if marker not in text:
-            css.write_text(text + "\n" + marker + STYLE_PATCH, encoding="utf-8")
+    text = css.read_text(encoding="utf-8")
+    text = re.sub(r"/\* real-photo-loader \*/.*?\Z", "", text, flags=re.S)
+    text = re.sub(r"/\* own-google-photos-only \*/.*?\Z", "", text, flags=re.S)
+    css.write_text(text.rstrip() + "\n" + STYLE_PATCH, encoding="utf-8")
 
     pages = list(ROOT.rglob("*.html"))
     if not pages:
@@ -250,17 +188,11 @@ def main() -> None:
     for page in pages:
         inject_script(page)
 
-    google_refs = 0
-    for path in ROOT.rglob("*"):
-        if path.is_file() and path.suffix.lower() in {".html", ".js", ".css"}:
-            try:
-                google_refs += path.read_text(encoding="utf-8").count("sites.google.com/sitesv-images-rt")
-            except UnicodeDecodeError:
-                pass
-    if google_refs < 50:
-        raise SystemExit(f"Expected original Google Site photo references, found {google_refs}")
-
-    print(f"Enabled real-photo loading on {len(pages)} pages with {google_refs} original Google Site photo references")
+    loader_text = (ASSETS / "photo-loader.js").read_text(encoding="utf-8")
+    if len(re.findall(r"sites\.google\.com/sitesv-images-rt", loader_text)) < 50:
+        raise SystemExit("Expected original Google Site photo references in loader")
+    print(f"Locked {sum(1 for item in items if item.get('image'))} venue photos to the user's original Google Site images")
+    print(f"Assigned {len(PREFERRED)} distinct original photos to landing-page categories")
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@ PHOTO_LOADER = r'''(() => {
   const items = window.LONDON_DATA || [];
   const byName = new Map(items.map(item => [normalise(item.name), item]));
   const memory = new Map();
-  const STORAGE_KEY = "london-real-photo-cache-v3";
+  const STORAGE_KEY = "london-real-photo-cache-v4";
   let stored = {};
   try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); } catch (_) {}
 

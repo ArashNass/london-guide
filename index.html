@@ -2,19 +2,49 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="A personally curated guide to London by Arash.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f4ee">
+  <meta name="description" content="London by Arash — a personal shortlist of places worth your time: museums, views, shopping, restaurants, pubs and useful apps.">
+  <meta property="og:title" content="London by Arash">
+  <meta property="og:description" content="A personal shortlist of places worth your time in London.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://london.arashnassirpour.com/">
+  <meta property="og:image" content="https://images.unsplash.com/photo-1693847281413-c5be66ad7690?auto=format&fit=crop&w=1600&q=84">
   <title>London by Arash</title>
   <style>
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f6f3ed;color:#171717;font-family:Inter,Arial,sans-serif;padding:24px}.card{max-width:760px;background:#fff;border:1px solid #ddd7cc;border-radius:28px;padding:56px;box-shadow:0 20px 60px rgba(0,0,0,.08)}.eyebrow{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#9a2f35;font-weight:700}h1{font-size:clamp(44px,8vw,84px);line-height:.95;margin:18px 0 22px;letter-spacing:-.05em}p{font-size:20px;line-height:1.6;color:#5e5a54;margin:0}.note{margin-top:34px;padding-top:22px;border-top:1px solid #ece7de;font-size:15px;color:#837d75}
+    html,body{margin:0;min-height:100%;background:#f7f4ee;color:#1e211d;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .loading{min-height:100vh;display:grid;place-items:center;text-align:center;padding:24px}
+    .loading strong{font:italic clamp(2.4rem,8vw,4.5rem)/1 Georgia,serif}
+    .loading small{display:block;margin-top:14px;color:#65685f}
   </style>
 </head>
 <body>
-  <main class="card">
-    <div class="eyebrow">Curated London Guide</div>
-    <h1>London by Arash</h1>
-    <p>A personal collection of places worth eating, exploring, shopping and returning to. The full guide is being prepared.</p>
-    <div class="note">Independent from arashnassirpour.com</div>
-  </main>
+  <main class="loading"><div><strong>London by Arash</strong><small>Opening the guide…</small></div></main>
+  <noscript>This guide requires JavaScript.</noscript>
+  <script src="payload/p01.js"></script>
+  <script src="payload/p02.js"></script>
+  <script src="payload/p03.js"></script>
+  <script src="payload/p04.js"></script>
+  <script src="payload/p05.js"></script>
+  <script src="payload/p06.js"></script>
+  <script src="payload/p07.js"></script>
+  <script src="payload/p08.js"></script>
+  <script src="payload/p09.js"></script>
+  <script src="payload/p10.js"></script>
+  <script>
+    (async () => {
+      try {
+        if (!("DecompressionStream" in window)) throw new Error("Browser unsupported");
+        const bytes = Uint8Array.from(atob(window.__LONDON_PAYLOAD || ""), character => character.charCodeAt(0));
+        const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+        const html = await new Response(stream).text();
+        document.open();
+        document.write(html);
+        document.close();
+      } catch (error) {
+        document.body.innerHTML = '<main class="loading"><div><strong>London by Arash</strong><small>Your browser could not open the guide. Please use a current version of Chrome, Edge, Firefox or Safari.</small></div></main>';
+      }
+    })();
+  </script>
 </body>
 </html>

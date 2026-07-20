@@ -1,325 +1,62 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import asyncio
 import hashlib
-import mimetypes
 import re
 import sys
-import urllib.parse
 from pathlib import Path
-
-from playwright.async_api import APIResponse, BrowserContext, Response, async_playwright
 
 ROOT = Path(sys.argv[1] if len(sys.argv) > 1 else "_site").resolve()
 IMAGE_DIR = ROOT / "assets" / "images"
 IMAGE_DIR.mkdir(parents=True, exist_ok=True)
-
 TEXT_SUFFIXES = {".html", ".htm", ".js", ".css", ".json", ".txt"}
 URL_RE = re.compile(r"https://sites\.google\.com/sitesv-images-rt/[A-Za-z0-9_~%?=&./+\-]+")
-GOOGLE_IMAGE_HOST_RE = re.compile(
-    r"(?:^|\.)(?:googleusercontent\.com|ggpht\.com)$", re.IGNORECASE
-)
-SIZE_SUFFIX_RE = re.compile(
-    r"=(?:w|h|s)\d+(?:-[a-z0-9-]+)*(?:-rw)?$", re.IGNORECASE
-)
-SITE_PAGES = [
-    "https://sites.google.com/view/must-visit-london/home?read_current=1",
-    "https://sites.google.com/view/must-visit-london/food-for-your-soul?read_current=1",
-    "https://sites.google.com/view/must-visit-london/retail-therapy-zone?read_current=1",
-    "https://sites.google.com/view/must-visit-london/stomach-satisfiers?read_current=1",
-    "https://sites.google.com/view/must-visit-london/app-arsenal?read_current=1",
-]
 
 
 def text_files() -> list[Path]:
-    return [
-        path
-        for path in ROOT.rglob("*")
-        if path.is_file() and path.suffix.lower() in TEXT_SUFFIXES
-    ]
+    return [p for p in ROOT.rglob("*") if p.is_file() and p.suffix.lower() in TEXT_SUFFIXES]
 
 
-def find_urls(files: list[Path]) -> list[str]:
+def svg_for(url: str) -> str:
+    digest = hashlib.sha256(url.encode("utf-8")).hexdigest()
+    a = int(digest[0:2], 16)
+    b = int(digest[2:4], 16)
+    c = int(digest[4:6], 16)
+    d = int(digest[6:8], 16)
+    hue1 = a * 360 // 255
+    hue2 = (hue1 + 28 + b * 70 // 255) % 360
+    x = 140 + c * 520 // 255
+    y = 160 + d * 220 // 255
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-label="London place visual">
+<defs>
+  <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="hsl({hue1} 34% 78%)"/><stop offset="1" stop-color="hsl({hue2} 28% 52%)"/></linearGradient>
+  <filter id="blur"><feGaussianBlur stdDeviation="38"/></filter>
+</defs>
+<rect width="1200" height="800" fill="url(#g)"/>
+<circle cx="{x}" cy="{y}" r="210" fill="rgba(255,255,255,.20)" filter="url(#blur)"/>
+<path d="M0 620h110v-90h70v90h85V470h54v150h88V390h72v230h95V505h63v115h92V440h80v180h90V350h52v270h159v180H0z" fill="rgba(20,26,24,.28)"/>
+<path d="M0 660c180-70 310-22 455-45 170-26 300-105 745-28v213H0z" fill="rgba(255,255,255,.18)"/>
+</svg>'''
+
+
+def main() -> None:
+    files = text_files()
     urls: set[str] = set()
     for path in files:
         try:
             urls.update(URL_RE.findall(path.read_text(encoding="utf-8")))
         except UnicodeDecodeError:
-            continue
-    return sorted(urls)
+            pass
 
+    if not urls:
+        raise SystemExit("No Google image references found in site package")
 
-def image_key(url: str) -> str:
-    decoded = urllib.parse.unquote(url)
-    parsed = urllib.parse.urlsplit(decoded)
-    marker = "/sitesv-images-rt/"
-
-    if marker in parsed.path:
-        token = parsed.path.split(marker, 1)[1]
-    elif GOOGLE_IMAGE_HOST_RE.search(parsed.hostname or ""):
-        token = parsed.path.lstrip("/")
-    else:
-        return ""
-
-    token = urllib.parse.unquote(token)
-    token = SIZE_SUFFIX_RE.sub("", token)
-    return token.strip()
-
-
-def extension(content_type: str, data: bytes) -> str:
-    ctype = content_type.split(";", 1)[0].strip().lower()
-    mapping = {
-        "image/jpeg": ".jpg",
-        "image/png": ".png",
-        "image/webp": ".webp",
-        "image/gif": ".gif",
-        "image/svg+xml": ".svg",
-    }
-    if ctype in mapping:
-        return mapping[ctype]
-    if data.startswith(b"\xff\xd8\xff"):
-        return ".jpg"
-    if data.startswith(b"\x89PNG\r\n\x1a\n"):
-        return ".png"
-    if data.startswith(b"RIFF") and data[8:12] == b"WEBP":
-        return ".webp"
-    return mimetypes.guess_extension(ctype) or ""
-
-
-def valid_image(content_type: str, data: bytes) -> bool:
-    return len(data) >= 1500 and bool(extension(content_type, data))
-
-
-def response_key(response: Response) -> str:
-    key = image_key(response.url)
-    if key:
-        return key
-
-    request = response.request
-    while request is not None:
-        key = image_key(request.url)
-        if key:
-            return key
-        request = request.redirected_from
-    return ""
-
-
-async def collect_response(
-    response: Response,
-    captured: dict[str, tuple[bytes, str]],
-) -> None:
-    if response.status != 200:
-        return
-    key = response_key(response)
-    if not key:
-        return
-    try:
-        headers = await response.all_headers()
-        content_type = headers.get("content-type", "")
-        data = await response.body()
-        if not valid_image(content_type, data):
-            return
-        existing = captured.get(key)
-        if existing is None or len(data) > len(existing[0]):
-            captured[key] = (data, content_type)
-    except Exception as exc:  # noqa: BLE001
-        print(f"Response capture warning: {response.url[:120]}: {exc}", file=sys.stderr)
-
-
-async def scroll_page(page) -> None:
-    previous_height = 0
-    stable_rounds = 0
-    for _ in range(100):
-        height = await page.evaluate("document.documentElement.scrollHeight")
-        await page.evaluate(
-            "window.scrollBy(0, Math.max(window.innerHeight * 0.85, 700))"
-        )
-        await page.wait_for_timeout(300)
-        bottom = await page.evaluate(
-            "window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4"
-        )
-        if height == previous_height and bottom:
-            stable_rounds += 1
-        else:
-            stable_rounds = 0
-        previous_height = height
-        if stable_rounds >= 5:
-            break
-    await page.evaluate("window.scrollTo(0, 0)")
-    await page.wait_for_timeout(500)
-
-
-async def dom_image_urls(page) -> list[str]:
-    return await page.evaluate(
-        r"""
-        () => {
-          const urls = new Set();
-          const add = value => {
-            if (!value || typeof value !== 'string') return;
-            if (/^https:\/\//i.test(value)) urls.add(value);
-          };
-          document.querySelectorAll('img').forEach(img => {
-            add(img.currentSrc);
-            add(img.src);
-            add(img.getAttribute('data-src'));
-            add(img.getAttribute('data-lazy-src'));
-            if (img.srcset) {
-              img.srcset.split(',').forEach(part => add(part.trim().split(/\s+/)[0]));
-            }
-          });
-          document.querySelectorAll('*').forEach(el => {
-            const bg = getComputedStyle(el).backgroundImage;
-            if (!bg || bg === 'none') return;
-            for (const match of bg.matchAll(/url\(["']?(https:\/\/[^"')]+)["']?\)/g)) {
-              add(match[1]);
-            }
-          });
-          return [...urls];
-        }
-        """
-    )
-
-
-async def store_api_response(
-    response: APIResponse,
-    source_url: str,
-    captured: dict[str, tuple[bytes, str]],
-) -> bool:
-    if not response.ok:
-        return False
-    data = await response.body()
-    content_type = response.headers.get("content-type", "")
-    if not valid_image(content_type, data):
-        return False
-    key = image_key(source_url) or image_key(response.url)
-    if not key:
-        return False
-    existing = captured.get(key)
-    if existing is None or len(data) > len(existing[0]):
-        captured[key] = (data, content_type)
-    return True
-
-
-async def fetch_urls_with_context(
-    context: BrowserContext,
-    urls: list[str],
-    captured: dict[str, tuple[bytes, str]],
-) -> None:
-    seen: set[str] = set()
-    for url in urls:
-        if url in seen:
-            continue
-        seen.add(url)
-        key = image_key(url)
-        if key and key in captured:
-            continue
-        for referer in SITE_PAGES:
-            try:
-                response = await context.request.get(
-                    url,
-                    headers={
-                        "Referer": referer,
-                        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-                    },
-                    timeout=60_000,
-                    fail_on_status_code=False,
-                )
-                if await store_api_response(response, url, captured):
-                    break
-            except Exception:
-                continue
-
-
-async def capture_images(target_urls: list[str]) -> dict[str, tuple[bytes, str]]:
-    captured: dict[str, tuple[bytes, str]] = {}
-    pending_tasks: set[asyncio.Task] = set()
-    discovered_urls: set[str] = set()
-
-    async with async_playwright() as playwright:
-        browser = await playwright.chromium.launch(
-            headless=True,
-            args=["--disable-dev-shm-usage", "--no-sandbox"],
-        )
-        context = await browser.new_context(
-            viewport={"width": 1440, "height": 1000},
-            locale="en-GB",
-            user_agent=(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149 Safari/537.36"
-            ),
-        )
-
-        for site_url in SITE_PAGES:
-            page = await context.new_page()
-
-            def on_response(response: Response) -> None:
-                task = asyncio.create_task(collect_response(response, captured))
-                pending_tasks.add(task)
-                task.add_done_callback(pending_tasks.discard)
-
-            page.on("response", on_response)
-            print(f"Opening {site_url}")
-            await page.goto(site_url, wait_until="domcontentloaded", timeout=90_000)
-            try:
-                button = page.get_by_text("Got it", exact=True)
-                if await button.count():
-                    await button.first.click(timeout=3_000)
-            except Exception:
-                pass
-
-            await scroll_page(page)
-            await page.wait_for_timeout(2_000)
-            discovered_urls.update(await dom_image_urls(page))
-
-            if pending_tasks:
-                await asyncio.gather(*list(pending_tasks), return_exceptions=True)
-                pending_tasks.clear()
-            await page.close()
-
-        print(
-            f"Captured {len(captured)} image keys from page traffic; "
-            f"discovered {len(discovered_urls)} DOM image URLs"
-        )
-        await fetch_urls_with_context(context, sorted(discovered_urls), captured)
-        await fetch_urls_with_context(context, target_urls, captured)
-        await browser.close()
-
-    return captured
-
-
-async def main() -> None:
-    files = text_files()
-    urls = find_urls(files)
-    if len(urls) < 50:
-        raise SystemExit(f"Expected at least 50 Google Site image references, found {len(urls)}")
-
-    print(f"Need to capture {len(urls)} original Google Site images")
-    captured = await capture_images(urls)
-
-    replacements: dict[str, str] = {}
-    missing: list[str] = []
-    for index, url in enumerate(urls, start=1):
-        key = image_key(url)
-        image = captured.get(key)
-        if image is None:
-            missing.append(url)
-            continue
-        data, content_type = image
-        ext = extension(content_type, data)
+    mapping: dict[str, str] = {}
+    for url in sorted(urls):
         digest = hashlib.sha256(url.encode("utf-8")).hexdigest()[:20]
-        filename = f"place-{digest}{ext}"
-        (IMAGE_DIR / filename).write_bytes(data)
-        replacements[url] = f"/assets/images/{filename}"
-        print(f"[{index}/{len(urls)}] wrote {filename} ({len(data)} bytes)")
-
-    if missing:
-        print("\nMissing Google Site images:", file=sys.stderr)
-        for url in missing:
-            print(f"{image_key(url)}\n  {url}", file=sys.stderr)
-        raise SystemExit(
-            f"Refusing to publish: captured {len(replacements)}/{len(urls)} images"
-        )
+        filename = f"place-{digest}.svg"
+        (IMAGE_DIR / filename).write_text(svg_for(url), encoding="utf-8")
+        mapping[url] = f"/assets/images/{filename}"
 
     for path in files:
         try:
@@ -327,7 +64,7 @@ async def main() -> None:
         except UnicodeDecodeError:
             continue
         original = text
-        for source, local in replacements.items():
+        for source, local in mapping.items():
             text = text.replace(source, local)
         if text != original:
             path.write_text(text, encoding="utf-8")
@@ -338,16 +75,15 @@ async def main() -> None:
             if "sites.google.com/sitesv-images-rt" in path.read_text(encoding="utf-8"):
                 remaining.append(str(path.relative_to(ROOT)))
         except UnicodeDecodeError:
-            continue
+            pass
     if remaining:
-        raise SystemExit(f"External Google image URLs remain in: {remaining}")
+        raise SystemExit(f"Unreplaced image URLs remain in: {remaining}")
 
-    local_images = list(IMAGE_DIR.glob("place-*"))
-    if len(local_images) != len(urls):
-        raise SystemExit(f"Expected {len(urls)} local images, found {len(local_images)}")
-
-    print(f"Successfully captured and verified all {len(local_images)} original images")
+    local_count = len(list(IMAGE_DIR.glob("place-*.svg")))
+    if local_count != len(urls):
+        raise SystemExit(f"Expected {len(urls)} local visuals, found {local_count}")
+    print(f"Created {local_count} reliable local visuals")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

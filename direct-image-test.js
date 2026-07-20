@@ -1,5 +1,5 @@
 (() => {
-  const photo = "/images/f1-exhibition.jpg";
+  const photo = "/images/f1-exhibition.webp";
 
   function apply() {
     document.querySelectorAll("img").forEach((image) => {

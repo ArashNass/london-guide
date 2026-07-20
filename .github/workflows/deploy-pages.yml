@@ -23,6 +23,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
       - name: Build static site
         run: |
           mkdir -p _site
@@ -33,12 +34,21 @@ jobs:
           test -f _site/restaurants/index.html
           test -f _site/assets/site.css
           test -f _site/assets/site.js
+
+      - name: Cache original Google Site images locally
+        run: |
+          python scripts/cache_google_site_images.py _site
+          test "$(find _site/assets/images -type f | wc -l)" -ge 50
+          ! grep -R "sites.google.com/sitesv-images-rt" _site --include='*.html' --include='*.js' --include='*.css'
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
           path: _site
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

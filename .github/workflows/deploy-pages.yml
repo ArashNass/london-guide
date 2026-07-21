@@ -72,6 +72,14 @@ jobs:
           test -s _site/london-now.js
           grep -q 'london-now.js' _site/index.html
 
+      - name: Apply safe page cleanup
+        run: |
+          cp safe-page-cleanup.js _site/safe-page-cleanup.js
+          find _site -type f -name '*.html' -exec sed -i 's#</body>#<script src="/safe-page-cleanup.js" defer></script></body>#' {} +
+          test -s _site/safe-page-cleanup.js
+          grep -q 'safe-page-cleanup.js' _site/index.html
+          grep -q 'safe-page-cleanup.js' _site/restaurants/index.html
+
       - name: Configure Pages
         uses: actions/configure-pages@v6
 

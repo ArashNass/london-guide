@@ -84,6 +84,10 @@ jobs:
           cp "images/Stomach Satisfiers/e88d4e7e899a0363be3b345815f13822.jpg" _site/images/
           cp "images/Stomach Satisfiers/fde7e35fc725aeb1c6f2f906a184413c.jpg" _site/images/
           cp "images/Stomach Satisfiers/feff9e6fa96d77c9622af0fe3abae913.jpg" _site/images/
+          cp "images/Stomach Satisfiers/c3f6f0e1a278129c41232961a1cc5fa5.jpg" _site/images/
+          cp "images/Stomach Satisfiers/502715d327bf1875cd7c5e3388c99320.jpg" _site/images/
+          cp "images/Stomach Satisfiers/266d7b0acceed2cd5596a08742b97676.jpg" _site/images/
+          cp "images/Stomach Satisfiers/ecd187f214537c371de0d4134f274313.jpg" _site/images/
           cp "images/Retail Therapy Zone/03cb11cfd4ee6c96f4ec21ed756d6cc1.jpg" _site/images/
           cp "images/Retail Therapy Zone/b5e8b7df1d5fe5ae2779237a53bcf7a6.jpg" _site/images/
           cp "images/Retail Therapy Zone/e813e2e8f284aa11bfd2f81358ffa87f.jpg" _site/images/
@@ -102,22 +106,11 @@ jobs:
           cp "images/App Arsenal/fe7848d644553ba7994e60ceb2bdad56.jpg" _site/images/
           cp direct-image-test.js _site/direct-image-test.js
           find _site -type f -name '*.html' -exec sed -i 's#</body>#<script src="/direct-image-test.js"></script></body>#' {} +
-          test -s _site/images/03cb11cfd4ee6c96f4ec21ed756d6cc1.jpg
-          test -s _site/images/b5e8b7df1d5fe5ae2779237a53bcf7a6.jpg
-          test -s _site/images/e813e2e8f284aa11bfd2f81358ffa87f.jpg
-          test -s _site/images/41a99e55539357a81955f12190896f70.jpg
-          test -s _site/images/e69b9e9707c5183433881687d2f19359.jpg
-          test -s _site/images/8f5b8ef7cd12ecb14cb2404ac6608827.jpg
-          test -s _site/images/e52ceff1ff32deea99bcb86de55b0ccf.jpg
-          test -s _site/images/2106c116b808c86a4f578d65e7c9ca52.jpg
-          test -s _site/images/367cb00006fe16108ca5781b0efd9cda.jpg
-          test -s _site/images/38c399d0f90f8edd059b9ba0e4bbce19.jpg
-          test -s _site/images/55be792712f487cbb7fad11b94c2ef3c.jpg
-          test -s _site/images/aef4f2f7a78a66dade68e08a9685a28f.jpg
-          test -s _site/images/d26e57a6ecbe9658f192fd06593c0e77.jpg
-          test -s _site/images/d470b67dc768f6e5e7ed2b202e63b977.jpg
-          test -s _site/images/f1463aabedc6d56097bd6adf9cc1fddc.jpg
-          test -s _site/images/fe7848d644553ba7994e60ceb2bdad56.jpg
+          test -s _site/images/c3f6f0e1a278129c41232961a1cc5fa5.jpg
+          test -s _site/images/502715d327bf1875cd7c5e3388c99320.jpg
+          test -s _site/images/266d7b0acceed2cd5596a08742b97676.jpg
+          test -s _site/images/ecd187f214537c371de0d4134f274313.jpg
+          test -s _site/images/c676d3ebdec91cba64684da3f11bbe31.jpg
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

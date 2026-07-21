@@ -91,6 +91,15 @@ jobs:
           cp "images/Retail Therapy Zone/e69b9e9707c5183433881687d2f19359.jpg" _site/images/
           cp "images/Retail Therapy Zone/8f5b8ef7cd12ecb14cb2404ac6608827.jpg" _site/images/
           cp "images/Retail Therapy Zone/e52ceff1ff32deea99bcb86de55b0ccf.jpg" _site/images/
+          cp "images/App Arsenal/2106c116b808c86a4f578d65e7c9ca52.jpg" _site/images/
+          cp "images/App Arsenal/367cb00006fe16108ca5781b0efd9cda.jpg" _site/images/
+          cp "images/App Arsenal/38c399d0f90f8edd059b9ba0e4bbce19.jpg" _site/images/
+          cp "images/App Arsenal/55be792712f487cbb7fad11b94c2ef3c.jpg" _site/images/
+          cp "images/App Arsenal/aef4f2f7a78a66dade68e08a9685a28f.jpg" _site/images/
+          cp "images/App Arsenal/d26e57a6ecbe9658f192fd06593c0e77.jpg" _site/images/
+          cp "images/App Arsenal/d470b67dc768f6e5e7ed2b202e63b977.jpg" _site/images/
+          cp "images/App Arsenal/f1463aabedc6d56097bd6adf9cc1fddc.jpg" _site/images/
+          cp "images/App Arsenal/fe7848d644553ba7994e60ceb2bdad56.jpg" _site/images/
           cp direct-image-test.js _site/direct-image-test.js
           find _site -type f -name '*.html' -exec sed -i 's#</body>#<script src="/direct-image-test.js"></script></body>#' {} +
           test -s _site/images/03cb11cfd4ee6c96f4ec21ed756d6cc1.jpg
@@ -100,6 +109,15 @@ jobs:
           test -s _site/images/e69b9e9707c5183433881687d2f19359.jpg
           test -s _site/images/8f5b8ef7cd12ecb14cb2404ac6608827.jpg
           test -s _site/images/e52ceff1ff32deea99bcb86de55b0ccf.jpg
+          test -s _site/images/2106c116b808c86a4f578d65e7c9ca52.jpg
+          test -s _site/images/367cb00006fe16108ca5781b0efd9cda.jpg
+          test -s _site/images/38c399d0f90f8edd059b9ba0e4bbce19.jpg
+          test -s _site/images/55be792712f487cbb7fad11b94c2ef3c.jpg
+          test -s _site/images/aef4f2f7a78a66dade68e08a9685a28f.jpg
+          test -s _site/images/d26e57a6ecbe9658f192fd06593c0e77.jpg
+          test -s _site/images/d470b67dc768f6e5e7ed2b202e63b977.jpg
+          test -s _site/images/f1463aabedc6d56097bd6adf9cc1fddc.jpg
+          test -s _site/images/fe7848d644553ba7994e60ceb2bdad56.jpg
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

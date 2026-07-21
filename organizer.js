@@ -2,7 +2,15 @@
   const sections={explore:'explore',views:'views',shopping:'shop',breakfast:'breakfast',restaurants:'eat',pubs:'pubs',apps:'apps'};
   const slug=location.pathname.split('/').filter(Boolean)[0]||'';
   const category=sections[slug];
-  const labels={explore:'Explore',views:'Views',shopping:'Shopping',breakfast:'Breakfast',restaurants:'Restaurants',pubs:'Pubs',apps:'Useful Apps'};
+  const labels={
+    explore:'Food for your Soul',
+    views:'Food for your Soul',
+    shopping:'Retail Therapy Zone',
+    breakfast:'Stomach Satisfiers',
+    restaurants:'Stomach Satisfiers',
+    pubs:'Stomach Satisfiers',
+    apps:'App Arsenal'
+  };
   function organise(){
     document.querySelectorAll('.card-monogram,.collection-icon').forEach(el=>el.remove());
     if(!category)return;

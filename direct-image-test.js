@@ -3,7 +3,8 @@
   const isExplore = path === "/explore/" || path === "/explore/index.html";
   const isFood = path === "/breakfast/" || path === "/breakfast/index.html" || path === "/restaurants/" || path === "/restaurants/index.html";
   const isShopping = path === "/shopping/" || path === "/shopping/index.html";
-  if (!isExplore && !isFood && !isShopping) return;
+  const isApps = path === "/apps/" || path === "/apps/index.html";
+  if (!isExplore && !isFood && !isShopping && !isApps) return;
 
   function applyPhoto(title, photo, alternatives = []) {
     const titles = [title, ...alternatives];
@@ -74,10 +75,23 @@
     applyPhoto("Canary Wharf", "/images/e52ceff1ff32deea99bcb86de55b0ccf.jpg");
   }
 
+  function applyApps() {
+    applyPhoto("OpenTable", "/images/2106c116b808c86a4f578d65e7c9ca52.jpg");
+    applyPhoto("DICE", "/images/367cb00006fe16108ca5781b0efd9cda.jpg");
+    applyPhoto("TheFork", "/images/38c399d0f90f8edd059b9ba0e4bbce19.jpg", ["The Fork"]);
+    applyPhoto("TodayTix", "/images/55be792712f487cbb7fad11b94c2ef3c.jpg");
+    applyPhoto("Citymapper", "/images/aef4f2f7a78a66dade68e08a9685a28f.jpg");
+    applyPhoto("Toilets4London", "/images/d26e57a6ecbe9658f192fd06593c0e77.jpg", ["Toilets 4 London"]);
+    applyPhoto("Time Out London", "/images/d470b67dc768f6e5e7ed2b202e63b977.jpg", ["Time Out"]);
+    applyPhoto("Fever", "/images/f1463aabedc6d56097bd6adf9cc1fddc.jpg");
+    applyPhoto("Gett", "/images/fe7848d644553ba7994e60ceb2bdad56.jpg");
+  }
+
   function applyAll() {
     if (isExplore) applyExplore();
     if (isFood) applyFood();
     if (isShopping) applyShopping();
+    if (isApps) applyApps();
   }
 
   applyAll();

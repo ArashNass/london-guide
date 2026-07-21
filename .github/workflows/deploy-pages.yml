@@ -84,30 +84,22 @@ jobs:
           cp "images/Stomach Satisfiers/e88d4e7e899a0363be3b345815f13822.jpg" _site/images/
           cp "images/Stomach Satisfiers/fde7e35fc725aeb1c6f2f906a184413c.jpg" _site/images/
           cp "images/Stomach Satisfiers/feff9e6fa96d77c9622af0fe3abae913.jpg" _site/images/
+          cp "images/Retail Therapy Zone/03cb11cfd4ee6c96f4ec21ed756d6cc1.jpg" _site/images/
+          cp "images/Retail Therapy Zone/b5e8b7df1d5fe5ae2779237a53bcf7a6.jpg" _site/images/
+          cp "images/Retail Therapy Zone/e813e2e8f284aa11bfd2f81358ffa87f.jpg" _site/images/
+          cp "images/Retail Therapy Zone/41a99e55539357a81955f12190896f70.jpg" _site/images/
+          cp "images/Retail Therapy Zone/e69b9e9707c5183433881687d2f19359.jpg" _site/images/
+          cp "images/Retail Therapy Zone/8f5b8ef7cd12ecb14cb2404ac6608827.jpg" _site/images/
+          cp "images/Retail Therapy Zone/e52ceff1ff32deea99bcb86de55b0ccf.jpg" _site/images/
           cp direct-image-test.js _site/direct-image-test.js
           find _site -type f -name '*.html' -exec sed -i 's#</body>#<script src="/direct-image-test.js"></script></body>#' {} +
-          test -s _site/images/00494a2df5ca8e2b91f205ba000dbd38.jpg
-          test -s _site/images/346442533b03c08660d77daa3b8cdda2.jpg
-          test -s _site/images/3c8d562250a27622c1c1ac1ad42a9806.jpg
-          test -s _site/images/3d69726a21c208527432b5460d9dc3a9.jpg
-          test -s _site/images/41f6279b6e7f35c8dda61ddbb31297a8.jpg
-          test -s _site/images/41fa9eb2951df180b394cb858ecd4d45.jpg
-          test -s _site/images/4587d1bd55103a623ba641955d89b07c.jpg
-          test -s _site/images/54425ba5ef290e2ec5218b0723970e10.jpg
-          test -s _site/images/720113e2b342ab64ac630ea457fc8263.jpg
-          test -s _site/images/7a6afd8a923c1c060dbe8212e235f61b.jpg
-          test -s _site/images/8480b383aacd251fef1074fe62cd1346.jpg
-          test -s _site/images/9006b8ae2007f252b1fd5666469091d3.jpg
-          test -s _site/images/a649b60fff8ec82aa0d5a510a212bf0d.jpg
-          test -s _site/images/ad5dc861c8d7c3868448441daacc2b3f.jpg
-          test -s _site/images/c676d3ebdec91cba64684da3f11bbe31.jpg
-          test -s _site/images/c81ce6bd5f280942bda03c7fbbd5e91c.jpg
-          test -s _site/images/d013d1bb44fc987eb5bf22fd4e228043.jpg
-          test -s _site/images/df8bb4fb6c8da946c315e192af5210cb.jpg
-          test -s _site/images/e580f0c958a1121c595240f13d3883d4.jpg
-          test -s _site/images/e88d4e7e899a0363be3b345815f13822.jpg
-          test -s _site/images/fde7e35fc725aeb1c6f2f906a184413c.jpg
-          test -s _site/images/feff9e6fa96d77c9622af0fe3abae913.jpg
+          test -s _site/images/03cb11cfd4ee6c96f4ec21ed756d6cc1.jpg
+          test -s _site/images/b5e8b7df1d5fe5ae2779237a53bcf7a6.jpg
+          test -s _site/images/e813e2e8f284aa11bfd2f81358ffa87f.jpg
+          test -s _site/images/41a99e55539357a81955f12190896f70.jpg
+          test -s _site/images/e69b9e9707c5183433881687d2f19359.jpg
+          test -s _site/images/8f5b8ef7cd12ecb14cb2404ac6608827.jpg
+          test -s _site/images/e52ceff1ff32deea99bcb86de55b0ccf.jpg
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

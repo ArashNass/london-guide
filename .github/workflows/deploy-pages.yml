@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -37,6 +37,18 @@ jobs:
           test -f _site/assets/site.css
           test -f _site/assets/home-photo-rotator.js
           test -f _site/assets/site.js
+
+      - name: Rename titles in deployed source
+        run: |
+          mkdir -p /tmp/repacked-site
+          python scripts/rename_deployed_titles.py _site --parts-dir /tmp/repacked-site
+          grep -q 'Wonder Wander' _site/index.html
+          grep -q 'Sky High' _site/views/index.html
+          grep -q 'Retail Therapy Zone' _site/shopping/index.html
+          grep -q 'Rise & Dine' _site/breakfast/index.html
+          grep -q 'Food for Your Soul' _site/restaurants/index.html
+          grep -q 'Pint Stops' _site/pubs/index.html
+          grep -q 'App Arsenal' _site/apps/index.html
 
       - name: Enable existing site photos
         run: |
@@ -91,3 +103,16 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Persist rebuilt deployed source archive
+        run: |
+          cp /tmp/repacked-site/site.part0* .
+          git add site.part00 site.part01 site.part02 site.part03 site.part04 site.part05
+          if git diff --cached --quiet; then
+            echo "The deployed source archive already contains the renamed titles."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Rename section titles for more distinctive branding"
+            git push
+          fi

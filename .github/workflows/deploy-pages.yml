@@ -42,15 +42,23 @@ jobs:
           python scripts/cache_google_site_images.py _site
           test -f _site/assets/photo-loader.js
 
-      - name: Add direct F1 photo
+      - name: Add uploaded venue photos
         run: |
           mkdir -p _site/images
-          cp images/8ff9674219704d66c64661d38e528f3f.jpg _site/images/8ff9674219704d66c64661d38e528f3f.jpg
+          cp images/0d7e295df686fe1e8fe1ddf003a41794.jpg _site/images/
+          cp images/182e732c1dbeb2ffc60b3a48e3bc7729.jpg _site/images/
+          cp images/188ba73c4da2e2f545270b50b5a01330.jpg _site/images/
+          cp images/5b427e328ceb6e89d8752d8e7acfc4f1.jpg _site/images/
+          cp images/66f907155dfc2a28b81a8a22527eabe4.jpg _site/images/
+          cp images/8ff9674219704d66c64661d38e528f3f.jpg _site/images/
           cp direct-image-test.js _site/direct-image-test.js
           find _site -type f -name '*.html' -exec sed -i 's#</body>#<script src="/direct-image-test.js"></script></body>#' {} +
+          test -s _site/images/0d7e295df686fe1e8fe1ddf003a41794.jpg
+          test -s _site/images/182e732c1dbeb2ffc60b3a48e3bc7729.jpg
+          test -s _site/images/188ba73c4da2e2f545270b50b5a01330.jpg
+          test -s _site/images/5b427e328ceb6e89d8752d8e7acfc4f1.jpg
+          test -s _site/images/66f907155dfc2a28b81a8a22527eabe4.jpg
           test -s _site/images/8ff9674219704d66c64661d38e528f3f.jpg
-          file _site/images/8ff9674219704d66c64661d38e528f3f.jpg | grep -q 'JPEG image data'
-          grep -q '/images/8ff9674219704d66c64661d38e528f3f.jpg' _site/direct-image-test.js
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

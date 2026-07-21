@@ -21,6 +21,35 @@
     });
   }
 
+  function applyAppPhoto(title, photo, alternatives = []) {
+    const titles = [title, ...alternatives];
+    const cards = document.querySelectorAll("article, .card, .place-card, [data-id]");
+    cards.forEach((card) => {
+      const text = card.textContent || "";
+      if (!titles.some(name => text.includes(name))) return;
+
+      let image = card.querySelector("img");
+      if (!image) {
+        const media = document.createElement("div");
+        media.className = "card-media app-card-media";
+        image = document.createElement("img");
+        image.alt = title;
+        image.loading = "lazy";
+        image.decoding = "async";
+        media.appendChild(image);
+        card.insertBefore(media, card.firstChild);
+      }
+
+      image.srcset = "";
+      image.src = photo;
+      image.classList.add("photo-loaded");
+      image.style.opacity = "1";
+      image.style.width = "100%";
+      image.style.height = "100%";
+      image.style.objectFit = "cover";
+    });
+  }
+
   function applyExplore() {
     applyPhoto("F1 Exhibition", "/images/8ff9674219704d66c64661d38e528f3f.jpg");
     applyPhoto("Lift 109", "/images/0d7e295df686fe1e8fe1ddf003a41794.jpg");
@@ -76,15 +105,15 @@
   }
 
   function applyApps() {
-    applyPhoto("OpenTable", "/images/2106c116b808c86a4f578d65e7c9ca52.jpg");
-    applyPhoto("DICE", "/images/367cb00006fe16108ca5781b0efd9cda.jpg");
-    applyPhoto("TheFork", "/images/38c399d0f90f8edd059b9ba0e4bbce19.jpg", ["The Fork"]);
-    applyPhoto("TodayTix", "/images/55be792712f487cbb7fad11b94c2ef3c.jpg");
-    applyPhoto("Citymapper", "/images/aef4f2f7a78a66dade68e08a9685a28f.jpg");
-    applyPhoto("Toilets4London", "/images/d26e57a6ecbe9658f192fd06593c0e77.jpg", ["Toilets 4 London"]);
-    applyPhoto("Time Out London", "/images/d470b67dc768f6e5e7ed2b202e63b977.jpg", ["Time Out"]);
-    applyPhoto("Fever", "/images/f1463aabedc6d56097bd6adf9cc1fddc.jpg");
-    applyPhoto("Gett", "/images/fe7848d644553ba7994e60ceb2bdad56.jpg");
+    applyAppPhoto("OpenTable", "/images/2106c116b808c86a4f578d65e7c9ca52.jpg");
+    applyAppPhoto("DICE", "/images/367cb00006fe16108ca5781b0efd9cda.jpg");
+    applyAppPhoto("TheFork", "/images/38c399d0f90f8edd059b9ba0e4bbce19.jpg", ["The Fork"]);
+    applyAppPhoto("TodayTix", "/images/55be792712f487cbb7fad11b94c2ef3c.jpg");
+    applyAppPhoto("Citymapper", "/images/aef4f2f7a78a66dade68e08a9685a28f.jpg");
+    applyAppPhoto("Toilets4London", "/images/d26e57a6ecbe9658f192fd06593c0e77.jpg", ["Toilets 4 London"]);
+    applyAppPhoto("Time Out London", "/images/d470b67dc768f6e5e7ed2b202e63b977.jpg", ["Time Out"]);
+    applyAppPhoto("Fever", "/images/f1463aabedc6d56097bd6adf9cc1fddc.jpg");
+    applyAppPhoto("Gett", "/images/fe7848d644553ba7994e60ceb2bdad56.jpg");
   }
 
   function applyAll() {
@@ -93,6 +122,10 @@
     if (isShopping) applyShopping();
     if (isApps) applyApps();
   }
+
+  const style = document.createElement("style");
+  style.textContent = ".app-card-media{aspect-ratio:16/9;overflow:hidden;background:#e9e4db}.app-card-media img{display:block;width:100%;height:100%;object-fit:cover}";
+  document.head.appendChild(style);
 
   applyAll();
   new MutationObserver(applyAll).observe(document.documentElement, { childList: true, subtree: true });

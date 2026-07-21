@@ -45,20 +45,42 @@ jobs:
       - name: Add uploaded venue photos
         run: |
           mkdir -p _site/images
-          cp images/0d7e295df686fe1e8fe1ddf003a41794.jpg _site/images/
-          cp images/182e732c1dbeb2ffc60b3a48e3bc7729.jpg _site/images/
-          cp images/188ba73c4da2e2f545270b50b5a01330.jpg _site/images/
-          cp images/5b427e328ceb6e89d8752d8e7acfc4f1.jpg _site/images/
-          cp images/66f907155dfc2a28b81a8a22527eabe4.jpg _site/images/
-          cp images/8ff9674219704d66c64661d38e528f3f.jpg _site/images/
+          cp "images/Food for your Soul/0d7e295df686fe1e8fe1ddf003a41794.jpg" _site/images/
+          cp "images/Food for your Soul/182e732c1dbeb2ffc60b3a48e3bc7729.jpg" _site/images/
+          cp "images/Food for your Soul/188ba73c4da2e2f545270b50b5a01330.jpg" _site/images/
+          cp "images/Food for your Soul/1939d360adeedd05cd242917995aeffd.jpg" _site/images/
+          cp "images/Food for your Soul/2683b978a8396c629c02c747905be9c5.jpg" _site/images/
+          cp "images/Food for your Soul/4928f976e7b52409afec4ab61092cee5.jpg" _site/images/
+          cp "images/Food for your Soul/590c6f0945d0d93cef5c726c9419abfa.jpg" _site/images/
+          cp "images/Food for your Soul/5b427e328ceb6e89d8752d8e7acfc4f1.jpg" _site/images/
+          cp "images/Food for your Soul/66f907155dfc2a28b81a8a22527eabe4.jpg" _site/images/
+          cp "images/Food for your Soul/8ff9674219704d66c64661d38e528f3f.jpg" _site/images/
+          cp "images/Food for your Soul/b1a57b35cafb5213490873c5e0a88418.jpg" _site/images/
+          cp "images/Food for your Soul/bcdcf2460868566f19ee29f1435d9823.jpg" _site/images/
+          cp "images/Food for your Soul/bf1a743a1ec2aae319c073e4b7bd7753.jpg" _site/images/
+          cp "images/Food for your Soul/c75572fab1e1853343075543bac0b899.jpg" _site/images/
+          cp "images/Food for your Soul/ec7c4ad259ef017c4671665e36aff59a.jpg" _site/images/
+          cp "images/Food for your Soul/f565cffccee2cd21103ac5db6e06a88b.jpg" _site/images/
+          cp "images/Food for your Soul/f79512cfb1ceef72be71da036b92318d.jpg" _site/images/
           cp direct-image-test.js _site/direct-image-test.js
           find _site -type f -name '*.html' -exec sed -i 's#</body>#<script src="/direct-image-test.js"></script></body>#' {} +
           test -s _site/images/0d7e295df686fe1e8fe1ddf003a41794.jpg
           test -s _site/images/182e732c1dbeb2ffc60b3a48e3bc7729.jpg
           test -s _site/images/188ba73c4da2e2f545270b50b5a01330.jpg
+          test -s _site/images/1939d360adeedd05cd242917995aeffd.jpg
+          test -s _site/images/2683b978a8396c629c02c747905be9c5.jpg
+          test -s _site/images/4928f976e7b52409afec4ab61092cee5.jpg
+          test -s _site/images/590c6f0945d0d93cef5c726c9419abfa.jpg
           test -s _site/images/5b427e328ceb6e89d8752d8e7acfc4f1.jpg
           test -s _site/images/66f907155dfc2a28b81a8a22527eabe4.jpg
           test -s _site/images/8ff9674219704d66c64661d38e528f3f.jpg
+          test -s _site/images/b1a57b35cafb5213490873c5e0a88418.jpg
+          test -s _site/images/bcdcf2460868566f19ee29f1435d9823.jpg
+          test -s _site/images/bf1a743a1ec2aae319c073e4b7bd7753.jpg
+          test -s _site/images/c75572fab1e1853343075543bac0b899.jpg
+          test -s _site/images/ec7c4ad259ef017c4671665e36aff59a.jpg
+          test -s _site/images/f565cffccee2cd21103ac5db6e06a88b.jpg
+          test -s _site/images/f79512cfb1ceef72be71da036b92318d.jpg
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

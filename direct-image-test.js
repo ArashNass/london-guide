@@ -133,45 +133,59 @@
   function isVisible(element) {
     const style = getComputedStyle(element);
     const rect = element.getBoundingClientRect();
-    return style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0;
+    return style.display !== "none" && style.visibility !== "hidden" && Number(style.opacity || 1) !== 0 && rect.width > 0 && rect.height > 0;
   }
 
-  function isCloseButton(element) {
+  function isCloseControl(element) {
     if (!(element instanceof HTMLElement) || !isVisible(element)) return false;
     const label = `${element.getAttribute("aria-label") || ""} ${element.getAttribute("title") || ""}`.toLowerCase();
     const text = (element.textContent || "").trim();
-    return label.includes("close") || text === "×" || text === "✕" || text === "✖" || text.toLowerCase() === "close";
+    return label.includes("close") || ["×", "✕", "✖", "close"].includes(text.toLowerCase());
   }
 
-  function findModalParts(closeButton) {
-    let overlay = closeButton.parentElement;
+  function getModalGeometry(closeControl) {
+    let overlay = closeControl.parentElement;
     while (overlay && overlay !== document.body) {
       const style = getComputedStyle(overlay);
       const rect = overlay.getBoundingClientRect();
-      const coversViewport = rect.width >= window.innerWidth * 0.85 && rect.height >= window.innerHeight * 0.85;
+      const coversViewport = rect.width >= window.innerWidth * 0.8 && rect.height >= window.innerHeight * 0.8;
       if ((style.position === "fixed" || style.position === "absolute") && coversViewport) break;
       overlay = overlay.parentElement;
     }
     if (!overlay || overlay === document.body) return null;
 
-    let panel = closeButton.parentElement;
-    while (panel.parentElement && panel.parentElement !== overlay) panel = panel.parentElement;
-    return { overlay, panel };
+    let panel = closeControl.parentElement;
+    let bestPanel = panel;
+    while (panel && panel !== overlay) {
+      const rect = panel.getBoundingClientRect();
+      const isPanelSized = rect.width < window.innerWidth * 0.96 || rect.height < window.innerHeight * 0.96;
+      if (isPanelSized) bestPanel = panel;
+      panel = panel.parentElement;
+    }
+
+    return { overlay, panel: bestPanel };
   }
 
-  document.addEventListener("click", (event) => {
-    const closeButtons = Array.from(document.querySelectorAll("button, [role='button'], [data-close], .modal-close, .close-modal, .dialog-close"))
-      .filter(isCloseButton);
+  document.addEventListener("pointerdown", (event) => {
+    const candidates = Array.from(document.querySelectorAll("button, [role='button'], [aria-label], [title], [data-close], a, span, div"));
+    const closeControls = candidates.filter(isCloseControl);
 
-    for (const closeButton of closeButtons) {
-      const parts = findModalParts(closeButton);
-      if (!parts) continue;
-      const { overlay, panel } = parts;
-      if (overlay.contains(event.target) && !panel.contains(event.target)) {
+    for (const closeControl of closeControls) {
+      const modal = getModalGeometry(closeControl);
+      if (!modal) continue;
+
+      const overlayRect = modal.overlay.getBoundingClientRect();
+      const panelRect = modal.panel.getBoundingClientRect();
+      const x = event.clientX;
+      const y = event.clientY;
+      const insideOverlay = x >= overlayRect.left && x <= overlayRect.right && y >= overlayRect.top && y <= overlayRect.bottom;
+      const insidePanel = x >= panelRect.left && x <= panelRect.right && y >= panelRect.top && y <= panelRect.bottom;
+
+      if (insideOverlay && !insidePanel) {
         event.preventDefault();
         event.stopPropagation();
-        closeButton.click();
-        break;
+        closeControl.click();
+        return;
       }
     }
   }, true);

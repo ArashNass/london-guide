@@ -53,10 +53,22 @@ jobs:
           cp direct-image-test.js _site/direct-image-test.js
           find _site -type f -name '*.html' -exec sed -i 's#</body>#<script src="/direct-image-test.js"></script></body>#' {} +
 
-      - name: Add London Now homepage panel
+      - name: Add London live homepage widget
+        env:
+          UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
         run: |
           cp london-now.js _site/london-now.js
-          sed -i 's#</body>#<script src="/london-now.js"></script></body>#' _site/index.html
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          path = Path("_site/london-now.js")
+          text = path.read_text()
+          key = os.environ.get("UNSPLASH_ACCESS_KEY", "")
+          text = text.replace("__UNSPLASH_ACCESS_KEY__", key)
+          path.write_text(text)
+          PY
+          sed -i 's#</body>#<script src="/london-now.js" defer></script></body>#' _site/index.html
           test -s _site/london-now.js
           grep -q 'london-now.js' _site/index.html
 

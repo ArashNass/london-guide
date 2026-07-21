@@ -20,9 +20,11 @@
     .landing-featured-badge{position:absolute;top:-14px;left:-14px;z-index:4;padding:9px 12px;border-radius:999px;background:#18191c;color:#fff;font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;box-shadow:0 10px 22px rgba(0,0,0,.16)}
     .landing-card-flow .category-tile{opacity:0;transform:translate3d(var(--flow-x,0),52px,0) rotate(var(--flow-r,0deg));animation:landingCardIn .82s var(--flow-delay,0s) var(--landing-ease) forwards;will-change:transform,opacity}
     .landing-card-flow .category-tile:hover{z-index:3}
+    .landing-live-anchor{max-width:1180px;margin:clamp(28px,5vw,72px) auto 0;padding:0 0 clamp(20px,4vw,48px)}
+    .landing-live-anchor>.london-now{margin:0 auto!important}
     @keyframes landingFeatureIn{to{opacity:1;transform:rotate(1deg) translate3d(0,0,0)}}
     @keyframes landingCardIn{to{opacity:1;transform:translate3d(0,0,0) rotate(0)}}
-    @media(max-width:860px){.landing-hero{grid-template-columns:1fr;min-height:auto;gap:30px}.landing-featured{width:min(100%,520px);justify-self:start;transform:rotate(1deg) translate3d(0,28px,0)}.landing-featured .category-tile,.landing-featured>a{min-height:280px}}
+    @media(max-width:860px){.landing-hero{grid-template-columns:1fr;min-height:auto;gap:30px}.landing-featured{width:min(100%,520px);justify-self:start;transform:rotate(1deg) translate3d(0,28px,0)}.landing-featured .category-tile,.landing-featured>a{min-height:280px}.landing-live-anchor{padding-left:16px;padding-right:16px}}
     @media(max-width:620px){.landing-hero{padding-top:42px!important}.landing-featured{display:none}.landing-card-flow .category-tile{--flow-x:0!important;--flow-r:0deg!important}}
     @media(prefers-reduced-motion:reduce){.landing-featured,.landing-card-flow .category-tile{animation:none!important;opacity:1!important;transform:none!important}.landing-hero:before{filter:none}}
   `;
@@ -31,6 +33,25 @@
   const findHero = () => {
     const heading = Array.from(document.querySelectorAll("h1,h2")).find(el => /London, without the endless list\.?/i.test(el.textContent || "")) || document.querySelector("main h1");
     return heading?.closest("section,header,.hero") || heading?.parentElement || null;
+  };
+
+  const findCardSection = () => {
+    const first = document.querySelector("a.category-tile");
+    return first?.closest("section") || first?.parentElement || null;
+  };
+
+  const moveLivePanel = () => {
+    const panel = document.querySelector("[data-london-now]");
+    const cardSection = findCardSection();
+    if (!panel || !cardSection || panel.closest(".landing-live-anchor")) return false;
+    let anchor = document.querySelector(".landing-live-anchor");
+    if (!anchor) {
+      anchor = document.createElement("div");
+      anchor.className = "landing-live-anchor";
+      cardSection.insertAdjacentElement("afterend", anchor);
+    }
+    anchor.appendChild(panel);
+    return true;
   };
 
   const enhance = () => {
@@ -58,7 +79,7 @@
       hero.appendChild(feature);
     }
 
-    const grid = cards[0].closest("section") || cards[0].parentElement;
+    const grid = findCardSection();
     if (grid && !grid.classList.contains("landing-card-flow")) {
       grid.classList.add("landing-card-flow");
       cards.forEach((card, index) => {
@@ -68,14 +89,15 @@
         card.style.setProperty("--flow-delay", `${Math.min(.08 * index, .64)}s`);
       });
     }
+    moveLivePanel();
     return true;
   };
 
-  if (!enhance()) {
-    const observer = new MutationObserver(() => {
-      if (enhance()) observer.disconnect();
-    });
-    observer.observe(document.documentElement, {childList:true, subtree:true});
-    setTimeout(() => observer.disconnect(), 5000);
-  }
+  enhance();
+  const observer = new MutationObserver(() => {
+    enhance();
+    moveLivePanel();
+  });
+  observer.observe(document.documentElement, {childList:true, subtree:true});
+  setTimeout(() => observer.disconnect(), 8000);
 })();

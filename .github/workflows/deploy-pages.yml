@@ -62,25 +62,52 @@ jobs:
           cp "images/Food for your Soul/ec7c4ad259ef017c4671665e36aff59a.jpg" _site/images/
           cp "images/Food for your Soul/f565cffccee2cd21103ac5db6e06a88b.jpg" _site/images/
           cp "images/Food for your Soul/f79512cfb1ceef72be71da036b92318d.jpg" _site/images/
+          cp "images/Stomach Satisfiers/00494a2df5ca8e2b91f205ba000dbd38.jpg" _site/images/
+          cp "images/Stomach Satisfiers/346442533b03c08660d77daa3b8cdda2.jpg" _site/images/
+          cp "images/Stomach Satisfiers/3c8d562250a27622c1c1ac1ad42a9806.jpg" _site/images/
+          cp "images/Stomach Satisfiers/3d69726a21c208527432b5460d9dc3a9.jpg" _site/images/
+          cp "images/Stomach Satisfiers/41f6279b6e7f35c8dda61ddbb31297a8.jpg" _site/images/
+          cp "images/Stomach Satisfiers/41fa9eb2951df180b394cb858ecd4d45.jpg" _site/images/
+          cp "images/Stomach Satisfiers/4587d1bd55103a623ba641955d89b07c.jpg" _site/images/
+          cp "images/Stomach Satisfiers/54425ba5ef290e2ec5218b0723970e10.jpg" _site/images/
+          cp "images/Stomach Satisfiers/720113e2b342ab64ac630ea457fc8263.jpg" _site/images/
+          cp "images/Stomach Satisfiers/7a6afd8a923c1c060dbe8212e235f61b.jpg" _site/images/
+          cp "images/Stomach Satisfiers/8480b383aacd251fef1074fe62cd1346.jpg" _site/images/
+          cp "images/Stomach Satisfiers/9006b8ae2007f252b1fd5666469091d3.jpg" _site/images/
+          cp "images/Stomach Satisfiers/a649b60fff8ec82aa0d5a510a212bf0d.jpg" _site/images/
+          cp "images/Stomach Satisfiers/ad5dc861c8d7c3868448441daacc2b3f.jpg" _site/images/
+          cp "images/Stomach Satisfiers/c676d3ebdec91cba64684da3f11bbe31.jpg" _site/images/
+          cp "images/Stomach Satisfiers/c81ce6bd5f280942bda03c7fbbd5e91c.jpg" _site/images/
+          cp "images/Stomach Satisfiers/d013d1bb44fc987eb5bf22fd4e228043.jpg" _site/images/
+          cp "images/Stomach Satisfiers/df8bb4fb6c8da946c315e192af5210cb.jpg" _site/images/
+          cp "images/Stomach Satisfiers/e580f0c958a1121c595240f13d3883d4.jpg" _site/images/
+          cp "images/Stomach Satisfiers/e88d4e7e899a0363be3b345815f13822.jpg" _site/images/
+          cp "images/Stomach Satisfiers/fde7e35fc725aeb1c6f2f906a184413c.jpg" _site/images/
+          cp "images/Stomach Satisfiers/feff9e6fa96d77c9622af0fe3abae913.jpg" _site/images/
           cp direct-image-test.js _site/direct-image-test.js
           find _site -type f -name '*.html' -exec sed -i 's#</body>#<script src="/direct-image-test.js"></script></body>#' {} +
-          test -s _site/images/0d7e295df686fe1e8fe1ddf003a41794.jpg
-          test -s _site/images/182e732c1dbeb2ffc60b3a48e3bc7729.jpg
-          test -s _site/images/188ba73c4da2e2f545270b50b5a01330.jpg
-          test -s _site/images/1939d360adeedd05cd242917995aeffd.jpg
-          test -s _site/images/2683b978a8396c629c02c747905be9c5.jpg
-          test -s _site/images/4928f976e7b52409afec4ab61092cee5.jpg
-          test -s _site/images/590c6f0945d0d93cef5c726c9419abfa.jpg
-          test -s _site/images/5b427e328ceb6e89d8752d8e7acfc4f1.jpg
-          test -s _site/images/66f907155dfc2a28b81a8a22527eabe4.jpg
-          test -s _site/images/8ff9674219704d66c64661d38e528f3f.jpg
-          test -s _site/images/b1a57b35cafb5213490873c5e0a88418.jpg
-          test -s _site/images/bcdcf2460868566f19ee29f1435d9823.jpg
-          test -s _site/images/bf1a743a1ec2aae319c073e4b7bd7753.jpg
-          test -s _site/images/c75572fab1e1853343075543bac0b899.jpg
-          test -s _site/images/ec7c4ad259ef017c4671665e36aff59a.jpg
-          test -s _site/images/f565cffccee2cd21103ac5db6e06a88b.jpg
-          test -s _site/images/f79512cfb1ceef72be71da036b92318d.jpg
+          test -s _site/images/00494a2df5ca8e2b91f205ba000dbd38.jpg
+          test -s _site/images/346442533b03c08660d77daa3b8cdda2.jpg
+          test -s _site/images/3c8d562250a27622c1c1ac1ad42a9806.jpg
+          test -s _site/images/3d69726a21c208527432b5460d9dc3a9.jpg
+          test -s _site/images/41f6279b6e7f35c8dda61ddbb31297a8.jpg
+          test -s _site/images/41fa9eb2951df180b394cb858ecd4d45.jpg
+          test -s _site/images/4587d1bd55103a623ba641955d89b07c.jpg
+          test -s _site/images/54425ba5ef290e2ec5218b0723970e10.jpg
+          test -s _site/images/720113e2b342ab64ac630ea457fc8263.jpg
+          test -s _site/images/7a6afd8a923c1c060dbe8212e235f61b.jpg
+          test -s _site/images/8480b383aacd251fef1074fe62cd1346.jpg
+          test -s _site/images/9006b8ae2007f252b1fd5666469091d3.jpg
+          test -s _site/images/a649b60fff8ec82aa0d5a510a212bf0d.jpg
+          test -s _site/images/ad5dc861c8d7c3868448441daacc2b3f.jpg
+          test -s _site/images/c676d3ebdec91cba64684da3f11bbe31.jpg
+          test -s _site/images/c81ce6bd5f280942bda03c7fbbd5e91c.jpg
+          test -s _site/images/d013d1bb44fc987eb5bf22fd4e228043.jpg
+          test -s _site/images/df8bb4fb6c8da946c315e192af5210cb.jpg
+          test -s _site/images/e580f0c958a1121c595240f13d3883d4.jpg
+          test -s _site/images/e88d4e7e899a0363be3b345815f13822.jpg
+          test -s _site/images/fde7e35fc725aeb1c6f2f906a184413c.jpg
+          test -s _site/images/feff9e6fa96d77c9622af0fe3abae913.jpg
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

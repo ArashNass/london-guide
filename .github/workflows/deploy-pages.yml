@@ -38,6 +38,15 @@ jobs:
           test -f _site/assets/home-photo-rotator.js
           test -f _site/assets/site.js
 
+      - name: Enhance landing page source
+        run: |
+          cp landing-motion.js _site/landing-motion.js
+          if ! grep -q 'landing-motion.js' _site/index.html; then
+            sed -i 's#</body>#<script src="/landing-motion.js" defer></script></body>#' _site/index.html
+          fi
+          test -s _site/landing-motion.js
+          grep -q 'landing-motion.js' _site/index.html
+
       - name: Rename titles in deployed source
         run: |
           mkdir -p /tmp/repacked-site
@@ -109,10 +118,10 @@ jobs:
           cp /tmp/repacked-site/site.part0* .
           git add site.part00 site.part01 site.part02 site.part03 site.part04 site.part05
           if git diff --cached --quiet; then
-            echo "The deployed source archive already contains the renamed titles."
+            echo "The deployed source archive already contains the latest landing-page design."
           else
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit -m "Rename section titles for more distinctive branding"
+            git commit -m "Persist modern landing page design"
             git push
           fi

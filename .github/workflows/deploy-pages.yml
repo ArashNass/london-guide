@@ -60,6 +60,14 @@ jobs:
           test -s _site/london-now.js
           grep -q 'london-now.js' _site/index.html
 
+      - name: Clean page search and card metadata
+        run: |
+          cp page-cleanup.js _site/page-cleanup.js
+          find _site -type f -name '*.html' -exec sed -i 's#</body>#<script src="/page-cleanup.js"></script></body>#' {} +
+          test -s _site/page-cleanup.js
+          grep -q 'page-cleanup.js' _site/index.html
+          grep -q 'page-cleanup.js' _site/restaurants/index.html
+
       - name: Configure Pages
         uses: actions/configure-pages@v6
 

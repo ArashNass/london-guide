@@ -2,7 +2,8 @@
   const path = window.location.pathname;
   const isExplore = path === "/explore/" || path === "/explore/index.html";
   const isFood = path === "/breakfast/" || path === "/breakfast/index.html" || path === "/restaurants/" || path === "/restaurants/index.html";
-  if (!isExplore && !isFood) return;
+  const isShopping = path === "/shopping/" || path === "/shopping/index.html";
+  if (!isExplore && !isFood && !isShopping) return;
 
   function applyPhoto(title, photo, alternatives = []) {
     const titles = [title, ...alternatives];
@@ -63,9 +64,20 @@
     applyPhoto("Gloria", "/images/feff9e6fa96d77c9622af0fe3abae913.jpg");
   }
 
+  function applyShopping() {
+    applyPhoto("Coal Drops Yard", "/images/03cb11cfd4ee6c96f4ec21ed756d6cc1.jpg");
+    applyPhoto("Battersea Power Station", "/images/b5e8b7df1d5fe5ae2779237a53bcf7a6.jpg");
+    applyPhoto("Old Spitalfields Market", "/images/e813e2e8f284aa11bfd2f81358ffa87f.jpg");
+    applyPhoto("Borough Market", "/images/41a99e55539357a81955f12190896f70.jpg");
+    applyPhoto("Marylebone Village", "/images/e69b9e9707c5183433881687d2f19359.jpg");
+    applyPhoto("Carnaby", "/images/8f5b8ef7cd12ecb14cb2404ac6608827.jpg");
+    applyPhoto("Canary Wharf", "/images/e52ceff1ff32deea99bcb86de55b0ccf.jpg");
+  }
+
   function applyAll() {
     if (isExplore) applyExplore();
     if (isFood) applyFood();
+    if (isShopping) applyShopping();
   }
 
   applyAll();

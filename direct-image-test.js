@@ -1,5 +1,8 @@
 (() => {
-  if (window.location.pathname !== "/explore/" && window.location.pathname !== "/explore/index.html") return;
+  const path = window.location.pathname;
+  const isExplore = path === "/explore/" || path === "/explore/index.html";
+  const isFood = path === "/breakfast/" || path === "/breakfast/index.html" || path === "/restaurants/" || path === "/restaurants/index.html";
+  if (!isExplore && !isFood) return;
 
   function applyPhoto(title, photo, alternatives = []) {
     const titles = [title, ...alternatives];
@@ -16,7 +19,7 @@
     });
   }
 
-  function applyAll() {
+  function applyExplore() {
     applyPhoto("F1 Exhibition", "/images/8ff9674219704d66c64661d38e528f3f.jpg");
     applyPhoto("Lift 109", "/images/0d7e295df686fe1e8fe1ddf003a41794.jpg");
     applyPhoto("V&A Museum", "/images/182e732c1dbeb2ffc60b3a48e3bc7729.jpg", ["V&A"]);
@@ -33,6 +36,36 @@
     applyPhoto("The Wallace Collection", "/images/ec7c4ad259ef017c4671665e36aff59a.jpg", ["Wallace Collection"]);
     applyPhoto("The Garden at 120", "/images/f565cffccee2cd21103ac5db6e06a88b.jpg", ["Garden at 120"]);
     applyPhoto("Royal Academy of Arts", "/images/f79512cfb1ceef72be71da036b92318d.jpg", ["Royal Academy"]);
+  }
+
+  function applyFood() {
+    applyPhoto("Half Cup", "/images/00494a2df5ca8e2b91f205ba000dbd38.jpg");
+    applyPhoto("Dishoom", "/images/346442533b03c08660d77daa3b8cdda2.jpg");
+    applyPhoto("Le Relais de Venise L’Entrecôte", "/images/3c8d562250a27622c1c1ac1ad42a9806.jpg", ["Le Relais de Venise L'Entrecôte", "Le Relais de Venise"]);
+    applyPhoto("Ishtar", "/images/3d69726a21c208527432b5460d9dc3a9.jpg");
+    applyPhoto("L’ETO", "/images/41f6279b6e7f35c8dda61ddbb31297a8.jpg", ["L'ETO", "Leto"]);
+    applyPhoto("Lina Stores", "/images/41fa9eb2951df180b394cb858ecd4d45.jpg");
+    applyPhoto("Kimchee Restaurant & Bar", "/images/4587d1bd55103a623ba641955d89b07c.jpg", ["Kimchee"]);
+    applyPhoto("Lemonia", "/images/54425ba5ef290e2ec5218b0723970e10.jpg");
+    applyPhoto("Fischer’s", "/images/720113e2b342ab64ac630ea457fc8263.jpg", ["Fischer's"]);
+    applyPhoto("Berenjak Soho", "/images/7a6afd8a923c1c060dbe8212e235f61b.jpg", ["Berenjak"]);
+    applyPhoto("Opium Chinatown", "/images/8480b383aacd251fef1074fe62cd1346.jpg", ["Opium"]);
+    applyPhoto("Din Tai Fung", "/images/9006b8ae2007f252b1fd5666469091d3.jpg");
+    applyPhoto("Delamina EAST", "/images/a649b60fff8ec82aa0d5a510a212bf0d.jpg", ["Delamina East", "Delamina"]);
+    applyPhoto("Alley Cats Pizza", "/images/ad5dc861c8d7c3868448441daacc2b3f.jpg", ["Alley Cats"]);
+    applyPhoto("Chiltern Firehouse", "/images/c676d3ebdec91cba64684da3f11bbe31.jpg");
+    applyPhoto("Granger & Co.", "/images/c81ce6bd5f280942bda03c7fbbd5e91c.jpg", ["Granger & Co"]);
+    applyPhoto("The Breakfast Club", "/images/d013d1bb44fc987eb5bf22fd4e228043.jpg", ["Breakfast Club"]);
+    applyPhoto("Roti King Battersea", "/images/df8bb4fb6c8da946c315e192af5210cb.jpg", ["Roti King"]);
+    applyPhoto("Arcade Food Hall", "/images/e580f0c958a1121c595240f13d3883d4.jpg", ["Arcade"]);
+    applyPhoto("Bergamot Café", "/images/e88d4e7e899a0363be3b345815f13822.jpg", ["Bergamot Cafe", "Bergamot"]);
+    applyPhoto("Circolo Popolare", "/images/fde7e35fc725aeb1c6f2f906a184413c.jpg");
+    applyPhoto("Gloria", "/images/feff9e6fa96d77c9622af0fe3abae913.jpg");
+  }
+
+  function applyAll() {
+    if (isExplore) applyExplore();
+    if (isFood) applyFood();
   }
 
   applyAll();

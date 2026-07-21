@@ -5,7 +5,8 @@
   const isFood = path === "/breakfast/" || path === "/breakfast/index.html" || path === "/restaurants/" || path === "/restaurants/index.html";
   const isShopping = path === "/shopping/" || path === "/shopping/index.html";
   const isApps = path === "/apps/" || path === "/apps/index.html";
-  if (!isExplore && !isViews && !isFood && !isShopping && !isApps) return;
+  const isPubs = path === "/pubs/" || path === "/pubs/index.html";
+  if (!isExplore && !isViews && !isFood && !isShopping && !isApps && !isPubs) return;
 
   function applyPhoto(title, photo, alternatives = []) {
     const titles = [title, ...alternatives];
@@ -13,8 +14,7 @@
       const card = image.closest("article, .card, .place-card, [data-id]");
       const alt = image.alt?.trim() || "";
       const text = card?.textContent || "";
-      const isMatch = titles.some(name => alt === name || text.includes(name));
-      if (!isMatch) return;
+      if (!titles.some(name => alt === name || text.includes(name))) return;
       image.srcset = "";
       image.src = photo;
       image.classList.add("photo-loaded");
@@ -24,11 +24,9 @@
 
   function applyAppPhoto(title, photo, alternatives = []) {
     const titles = [title, ...alternatives];
-    const cards = document.querySelectorAll("article, .card, .place-card, [data-id]");
-    cards.forEach((card) => {
+    document.querySelectorAll("article, .card, .place-card, [data-id]").forEach((card) => {
       const text = card.textContent || "";
       if (!titles.some(name => text.includes(name))) return;
-
       let image = card.querySelector("img");
       if (!image) {
         const media = document.createElement("div");
@@ -40,7 +38,6 @@
         media.appendChild(image);
         card.insertBefore(media, card.firstChild);
       }
-
       image.srcset = "";
       image.src = photo;
       image.classList.add("photo-loaded");
@@ -69,14 +66,6 @@
     applyPhoto("The Wallace Collection", "/images/ec7c4ad259ef017c4671665e36aff59a.jpg", ["Wallace Collection"]);
     applyPhoto("The Garden at 120", "/images/f565cffccee2cd21103ac5db6e06a88b.jpg", ["Garden at 120"]);
     applyPhoto("Royal Academy of Arts", "/images/f79512cfb1ceef72be71da036b92318d.jpg", ["Royal Academy"]);
-  }
-
-  function applyExplore() {
-    applySoulPhotos();
-  }
-
-  function applyViews() {
-    applySoulPhotos();
   }
 
   function applyFood() {
@@ -126,12 +115,20 @@
     applyAppPhoto("Gett", "/images/fe7848d644553ba7994e60ceb2bdad56.jpg");
   }
 
+  function applyPubs() {
+    applyPhoto("The Spaniards Inn", "/images/c3f6f0e1a278129c41232961a1cc5fa5.jpg");
+    applyPhoto("The Gun", "/images/502715d327bf1875cd7c5e3388c99320.jpg");
+    applyPhoto("Trafalgar Tavern", "/images/266d7b0acceed2cd5596a08742b97676.jpg", ["The Trafalgar Tavern"]);
+    applyPhoto("Mr Fogg’s Tavern", "/images/ecd187f214537c371de0d4134f274313.jpg", ["Mr Fogg's Tavern"]);
+    applyPhoto("The Churchill Arms", "/images/c676d3ebdec91cba64684da3f11bbe31.jpg", ["Churchill Arms"]);
+  }
+
   function applyAll() {
-    if (isExplore) applyExplore();
-    if (isViews) applyViews();
+    if (isExplore || isViews) applySoulPhotos();
     if (isFood) applyFood();
     if (isShopping) applyShopping();
     if (isApps) applyApps();
+    if (isPubs) applyPubs();
   }
 
   const style = document.createElement("style");

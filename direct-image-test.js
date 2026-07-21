@@ -6,7 +6,6 @@
   const isShopping = path === "/shopping/" || path === "/shopping/index.html";
   const isApps = path === "/apps/" || path === "/apps/index.html";
   const isPubs = path === "/pubs/" || path === "/pubs/index.html";
-  if (!isExplore && !isViews && !isFood && !isShopping && !isApps && !isPubs) return;
 
   function applyPhoto(title, photo, alternatives = []) {
     const titles = [title, ...alternatives];
@@ -137,29 +136,34 @@
     return style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0;
   }
 
+  function isCloseButton(element) {
+    if (!(element instanceof HTMLElement) || !isVisible(element)) return false;
+    const label = `${element.getAttribute("aria-label") || ""} ${element.getAttribute("title") || ""}`.toLowerCase();
+    const text = (element.textContent || "").trim();
+    return label.includes("close") || text === "×" || text === "✕" || text === "✖" || text.toLowerCase() === "close";
+  }
+
   function findModalParts(closeButton) {
     let overlay = closeButton.parentElement;
     while (overlay && overlay !== document.body) {
       const style = getComputedStyle(overlay);
       const rect = overlay.getBoundingClientRect();
-      const coversViewport = rect.width >= window.innerWidth * 0.9 && rect.height >= window.innerHeight * 0.9;
-      if (style.position === "fixed" && coversViewport) break;
+      const coversViewport = rect.width >= window.innerWidth * 0.85 && rect.height >= window.innerHeight * 0.85;
+      if ((style.position === "fixed" || style.position === "absolute") && coversViewport) break;
       overlay = overlay.parentElement;
     }
     if (!overlay || overlay === document.body) return null;
 
-    let panel = closeButton;
+    let panel = closeButton.parentElement;
     while (panel.parentElement && panel.parentElement !== overlay) panel = panel.parentElement;
     return { overlay, panel };
   }
 
   document.addEventListener("click", (event) => {
-    const closeButtons = document.querySelectorAll(
-      'button[aria-label*="close" i], [data-close], .modal-close, .close-modal, .dialog-close'
-    );
+    const closeButtons = Array.from(document.querySelectorAll("button, [role='button'], [data-close], .modal-close, .close-modal, .dialog-close"))
+      .filter(isCloseButton);
 
     for (const closeButton of closeButtons) {
-      if (!isVisible(closeButton)) continue;
       const parts = findModalParts(closeButton);
       if (!parts) continue;
       const { overlay, panel } = parts;

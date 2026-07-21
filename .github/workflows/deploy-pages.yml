@@ -53,6 +53,13 @@ jobs:
           cp direct-image-test.js _site/direct-image-test.js
           find _site -type f -name '*.html' -exec sed -i 's#</body>#<script src="/direct-image-test.js"></script></body>#' {} +
 
+      - name: Add London Now homepage panel
+        run: |
+          cp london-now.js _site/london-now.js
+          sed -i 's#</body>#<script src="/london-now.js"></script></body>#' _site/index.html
+          test -s _site/london-now.js
+          grep -q 'london-now.js' _site/index.html
+
       - name: Configure Pages
         uses: actions/configure-pages@v6
 

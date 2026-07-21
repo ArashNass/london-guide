@@ -60,14 +60,6 @@ jobs:
           test -s _site/london-now.js
           grep -q 'london-now.js' _site/index.html
 
-      - name: Correct page search and homepage spacing
-        run: |
-          cp page-cleanup-v2.js _site/page-cleanup-v2.js
-          find _site -type f -name '*.html' -exec sed -i 's#</body>#<script src="/page-cleanup-v2.js"></script></body>#' {} +
-          test -s _site/page-cleanup-v2.js
-          grep -q 'page-cleanup-v2.js' _site/index.html
-          grep -q 'page-cleanup-v2.js' _site/restaurants/index.html
-
       - name: Configure Pages
         uses: actions/configure-pages@v6
 

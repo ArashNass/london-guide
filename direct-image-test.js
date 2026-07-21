@@ -131,6 +131,47 @@
     if (isPubs) applyPubs();
   }
 
+  function isVisible(element) {
+    const style = getComputedStyle(element);
+    const rect = element.getBoundingClientRect();
+    return style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0;
+  }
+
+  function findModalParts(closeButton) {
+    let overlay = closeButton.parentElement;
+    while (overlay && overlay !== document.body) {
+      const style = getComputedStyle(overlay);
+      const rect = overlay.getBoundingClientRect();
+      const coversViewport = rect.width >= window.innerWidth * 0.9 && rect.height >= window.innerHeight * 0.9;
+      if (style.position === "fixed" && coversViewport) break;
+      overlay = overlay.parentElement;
+    }
+    if (!overlay || overlay === document.body) return null;
+
+    let panel = closeButton;
+    while (panel.parentElement && panel.parentElement !== overlay) panel = panel.parentElement;
+    return { overlay, panel };
+  }
+
+  document.addEventListener("click", (event) => {
+    const closeButtons = document.querySelectorAll(
+      'button[aria-label*="close" i], [data-close], .modal-close, .close-modal, .dialog-close'
+    );
+
+    for (const closeButton of closeButtons) {
+      if (!isVisible(closeButton)) continue;
+      const parts = findModalParts(closeButton);
+      if (!parts) continue;
+      const { overlay, panel } = parts;
+      if (overlay.contains(event.target) && !panel.contains(event.target)) {
+        event.preventDefault();
+        event.stopPropagation();
+        closeButton.click();
+        break;
+      }
+    }
+  }, true);
+
   const style = document.createElement("style");
   style.textContent = ".app-card-media{aspect-ratio:16/9;overflow:hidden;background:#e9e4db}.app-card-media img{display:block;width:100%;height:100%;object-fit:cover}";
   document.head.appendChild(style);

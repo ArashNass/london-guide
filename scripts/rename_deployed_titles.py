@@ -9,6 +9,7 @@ import re
 import subprocess
 import tempfile
 from pathlib import Path
+from urllib.parse import urlparse
 
 DISPLAY_NAMES = {
     "Explore": "Wonder Wander",
@@ -43,19 +44,16 @@ ROUTES = {
 def replace_visible_text(text: str) -> tuple[str, int]:
     changes = 0
 
-    # Replace exact HTML text nodes only, retaining surrounding whitespace.
     for old, new in sorted(DISPLAY_NAMES.items(), key=lambda item: len(item[0]), reverse=True):
         pattern = re.compile(rf">(\s*){re.escape(old)}(\s*)<")
         text, count = pattern.subn(lambda m: f">{m.group(1)}{new}{m.group(2)}<", text)
         changes += count
 
-    # Replace page titles where the old section name is the title prefix.
     for old, new in DISPLAY_NAMES.items():
         pattern = re.compile(rf"(<title>\s*){re.escape(old)}(\s*[—|-]\s*London by Arash\s*</title>)", re.I)
         text, count = pattern.subn(lambda m: f"{m.group(1)}{new}{m.group(2)}", text)
         changes += count
 
-    # Replace common quoted label values in embedded configuration without touching keys/routes.
     for old, new in DISPLAY_NAMES.items():
         patterns = [
             re.compile(rf"(\blabel\s*:\s*['\"]){re.escape(old)}(['\"])", re.I),
@@ -86,8 +84,19 @@ def update_site(site: Path) -> list[Path]:
     return changed
 
 
+def homepage_routes(homepage: str) -> set[str]:
+    routes: set[str] = set()
+    for href in re.findall(r'href=["\']([^"\']+)["\']', homepage, flags=re.I):
+        parsed = urlparse(href)
+        path = parsed.path.strip("/")
+        if path:
+            routes.add(path.split("/")[0])
+    return routes
+
+
 def verify(site: Path) -> None:
     homepage = (site / "index.html").read_text(encoding="utf-8")
+    linked_routes = homepage_routes(homepage)
     failures: list[str] = []
 
     for route, new_name in ROUTES.items():
@@ -98,10 +107,9 @@ def verify(site: Path) -> None:
         route_html = route_file.read_text(encoding="utf-8")
         if new_name not in route_html:
             failures.append(f"new title missing from /{route}/: {new_name}")
-        if not re.search(rf'href=["\'][^"\']*/{re.escape(route)}/?["\']', homepage):
+        if route not in linked_routes:
             failures.append(f"homepage link missing for /{route}/")
 
-    # Ensure old standalone display text is gone from HTML while allowing words in descriptions.
     old_primary = ["Explore", "Views", "Shopping", "Breakfast", "Restaurants", "Pubs", "Apps"]
     for html_file in site.rglob("*.html"):
         text = html_file.read_text(encoding="utf-8")
@@ -124,14 +132,10 @@ def rebuild_parts(site: Path, output: Path) -> None:
         subprocess.run(["bash", "-lc", command], check=True)
         encoded = base64.encodebytes(archive.read_bytes())
 
-    # Split into exactly six files; concatenation remains valid base64 for the deploy workflow.
     chunk_size = (len(encoded) + 5) // 6
     for index in range(6):
         start = index * chunk_size
-        end = min((index + 1) * chunk_size, len(encoded))
-        chunk = encoded[start:end]
-        if index == 5:
-            chunk = encoded[start:]
+        chunk = encoded[start:] if index == 5 else encoded[start : min((index + 1) * chunk_size, len(encoded))]
         if not chunk:
             raise SystemExit("Archive unexpectedly produced an empty site part")
         (output / f"site.part{index:02d}").write_bytes(chunk)

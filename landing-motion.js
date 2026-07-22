@@ -36,9 +36,12 @@
     return heading?.closest("section,header,.hero") || heading?.parentElement || null;
   };
 
+  // Skip the tile that was moved into the hero featured slot — its closest("section")
+  // would return the hero, not the card grid, placing the live anchor in the wrong spot.
   const findCardSection = () => {
-    const first = document.querySelector("a.category-tile");
-    return first?.closest("section") || first?.parentElement || null;
+    const gridTile = Array.from(document.querySelectorAll("a.category-tile"))
+      .find(t => !t.closest(".landing-featured-slot"));
+    return gridTile?.closest("section") || gridTile?.parentElement || null;
   };
 
   let animationStarted = false;
@@ -66,7 +69,6 @@
     if (!firstCard) return;
     firstCard.querySelectorAll("img").forEach(img => {
       if (img.loading === "lazy") img.loading = "eager";
-      // Nudge src to re-trigger load if browser deferred it
       if (img.src && !img.complete && !img.dataset.eagerNudged) {
         img.dataset.eagerNudged = "1";
         const src = img.src;

@@ -94,6 +94,13 @@ jobs:
           grep -q 'safe-page-cleanup.js' _site/index.html
           grep -q 'safe-page-cleanup.js' _site/restaurants/index.html
 
+      - name: Add search metadata and discovery files
+        run: |
+          python scripts/enhance_seo.py _site
+          grep -q 'rel="canonical"' _site/index.html
+          test -s _site/robots.txt
+          test -s _site/sitemap.xml
+
       - name: Configure Pages
         uses: actions/configure-pages@v6
 

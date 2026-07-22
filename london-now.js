@@ -67,18 +67,22 @@
   document.head.appendChild(style);
 
   function insertWidget() {
-    const phrase = "London, without the endless list.";
-    const candidates = Array.from(document.querySelectorAll("h1,h2,h3,p"));
-    const heading = candidates.find(el => (el.textContent || "").trim().includes(phrase));
-    if (heading) {
-      const heroBlock = heading.closest("section,header,.hero") || heading.parentElement;
-      heroBlock.insertAdjacentElement("afterend", panel);
-      return;
-    }
+    // If landing-motion.js has already created the anchor, drop straight in
+    const anchor = document.querySelector(".landing-live-anchor");
+    if (anchor) { anchor.appendChild(panel); return; }
+
+    // Place after the category-tile cards section (bottom of page, after cards)
     const firstTile = document.querySelector("a.category-tile");
-    const target = firstTile?.closest("section") || firstTile?.parentElement;
-    if (target) target.parentElement.insertBefore(panel, target);
-    else document.querySelector("main")?.prepend(panel);
+    const cardSection = firstTile?.closest("section") || firstTile?.parentElement;
+    if (cardSection) { cardSection.insertAdjacentElement("afterend", panel); return; }
+
+    // Fallback: after the hero block
+    const heading = Array.from(document.querySelectorAll("h1,h2,h3,p"))
+      .find(el => (el.textContent || "").trim().includes("London, without the endless list."));
+    const heroBlock = heading?.closest("section,header,.hero") || heading?.parentElement;
+    if (heroBlock) { heroBlock.insertAdjacentElement("afterend", panel); return; }
+
+    document.querySelector("main")?.appendChild(panel);
   }
   insertWidget();
 

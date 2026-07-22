@@ -12,8 +12,7 @@
     .landing-hero-copy h1{max-width:760px;text-wrap:balance;letter-spacing:-.055em}
     .landing-hero-copy p{max-width:650px;text-wrap:pretty}
     .landing-featured-slot{min-width:0;align-self:center}
-    .landing-featured-slot .category-tile{width:100%;min-height:clamp(280px,32vw,420px);overflow:hidden}
-    .landing-featured-slot .category-tile img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;opacity:1!important}
+    .landing-featured-slot .category-tile{width:100%;min-height:clamp(280px,32vw,420px);display:block;background:#1e2a20;overflow:hidden;border-radius:inherit}
     .landing-card-grid{position:relative}
     .landing-card-grid .category-tile.fly-in,.landing-featured-slot .category-tile.fly-in{opacity:0;transform:translateY(40px);animation:flyIn .5s ease-out forwards;animation-delay:calc(var(--i) * .08s);will-change:opacity,transform}
     .landing-card-grid.fly-complete .category-tile,.landing-featured-slot.fly-complete .category-tile{opacity:1;transform:none;animation:none;will-change:auto}

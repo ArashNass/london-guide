@@ -74,24 +74,9 @@ jobs:
           cp direct-image-test.js _site/direct-image-test.js
           find _site -type f -name '*.html' -exec sed -i 's#</body>#<script src="/direct-image-test.js"></script></body>#' {} +
 
-      - name: Add London live homepage widget
-        env:
-          UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
+      - name: Remove London Now widget
         run: |
-          cp london-now.js _site/london-now.js
-          python - <<'PY'
-          import os
-          from pathlib import Path
-
-          path = Path("_site/london-now.js")
-          text = path.read_text()
-          key = os.environ.get("UNSPLASH_ACCESS_KEY", "")
-          text = text.replace("__UNSPLASH_ACCESS_KEY__", key)
-          path.write_text(text)
-          PY
-          sed -i 's#</body>#<script src="/london-now.js" defer></script></body>#' _site/index.html
-          test -s _site/london-now.js
-          grep -q 'london-now.js' _site/index.html
+          find _site -type f -name '*.html' -exec sed -i 's#<script src="/london-now\.js[^"]*"[^>]*></script>##g' {} +
 
       - name: Apply safe page cleanup
         run: |

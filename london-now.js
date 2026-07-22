@@ -24,7 +24,6 @@
           <span class="london-now__eyebrow">London now</span>
           <h2 class="london-now__time" data-now-time>--:--</h2>
         </div>
-        <span class="london-now__pulse"><i></i>Live</span>
       </div>
       <div class="london-now__grid">
         <div class="london-now__item"><span>Weather</span><strong data-now-weather>Loading…</strong></div>
@@ -47,8 +46,6 @@
     .london-now__topline{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:20px}
     .london-now__eyebrow{display:block;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#a12626;margin-bottom:5px}
     .london-now__time{font-size:clamp(34px,5vw,58px);line-height:.95;letter-spacing:-.055em;margin:0;font-weight:760}
-    .london-now__pulse{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:750;text-transform:uppercase;letter-spacing:.09em;color:#4d5157;margin-top:4px}
-    .london-now__pulse i{width:8px;height:8px;border-radius:50%;background:#2e9b63;box-shadow:0 0 0 5px rgba(46,155,99,.12);animation:londonPulse 2s infinite}
     .london-now__grid{display:grid;grid-template-columns:1fr 1fr 2fr;gap:12px}
     .london-now__item{min-width:0;padding:15px 16px;border-radius:15px;background:rgba(255,255,255,.74);border:1px solid rgba(21,24,29,.07)}
     .london-now__item span{display:block;font-size:11px;font-weight:780;text-transform:uppercase;letter-spacing:.11em;color:#777b82;margin-bottom:7px}
@@ -59,10 +56,8 @@
     .london-now__photo img{width:100%;height:clamp(230px,32vw,420px);object-fit:cover;display:block}
     .london-now__photo figcaption{padding:8px 12px;font-size:11px;line-height:1.35;color:#666;background:#fff}
     .london-now__photo a{color:inherit}
-    @keyframes londonPulse{0%,100%{box-shadow:0 0 0 4px rgba(46,155,99,.12)}50%{box-shadow:0 0 0 9px rgba(46,155,99,0)}}
     @media(max-width:760px){.london-now{margin:22px 16px 28px;border-radius:18px}.london-now__content{padding:20px}.london-now__grid{grid-template-columns:1fr 1fr}.london-now__item--wide{grid-column:1/-1}.london-now__time{font-size:42px}}
     @media(max-width:420px){.london-now__grid{grid-template-columns:1fr}.london-now__item--wide{grid-column:auto}}
-    @media(prefers-reduced-motion:reduce){.london-now__pulse i{animation:none}}
   `;
   document.head.appendChild(style);
 
@@ -71,14 +66,14 @@
     const anchor = document.querySelector(".landing-live-anchor");
     if (anchor) { anchor.appendChild(panel); return; }
 
-    // Find a category tile that is NOT inside the hero featured slot (that card was moved there
-    // by landing-motion.js and its closest("section") would return the hero, not the card grid)
+    // Find a tile NOT inside the hero featured slot — that card's closest("section")
+    // returns the hero, not the card grid
     const gridTile = Array.from(document.querySelectorAll("a.category-tile"))
       .find(t => !t.closest(".landing-featured-slot,.landing-hero-copy,.landing-hero"));
     const cardSection = gridTile?.closest("section") || gridTile?.parentElement;
     if (cardSection) { cardSection.insertAdjacentElement("afterend", panel); return; }
 
-    // Fallback: after the hero block
+    // Final fallback: after the hero block
     const heading = Array.from(document.querySelectorAll("h1,h2,h3,p"))
       .find(el => (el.textContent || "").trim().includes("London, without the endless list."));
     const heroBlock = heading?.closest("section,header,.hero") || heading?.parentElement;

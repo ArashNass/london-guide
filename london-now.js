@@ -71,9 +71,11 @@
     const anchor = document.querySelector(".landing-live-anchor");
     if (anchor) { anchor.appendChild(panel); return; }
 
-    // Place after the category-tile cards section (bottom of page, after cards)
-    const firstTile = document.querySelector("a.category-tile");
-    const cardSection = firstTile?.closest("section") || firstTile?.parentElement;
+    // Find a category tile that is NOT inside the hero featured slot (that card was moved there
+    // by landing-motion.js and its closest("section") would return the hero, not the card grid)
+    const gridTile = Array.from(document.querySelectorAll("a.category-tile"))
+      .find(t => !t.closest(".landing-featured-slot,.landing-hero-copy,.landing-hero"));
+    const cardSection = gridTile?.closest("section") || gridTile?.parentElement;
     if (cardSection) { cardSection.insertAdjacentElement("afterend", panel); return; }
 
     // Fallback: after the hero block

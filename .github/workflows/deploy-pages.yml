@@ -1,4 +1,4 @@
-name: Deploy London Guide
+﻿name: Deploy London Guide
 
 on:
   push:
@@ -78,6 +78,14 @@ jobs:
         run: |
           find _site -type f -name '*.html' -exec sed -i 's#<script src="/london-now\.js[^"]*"[^>]*></script>##g' {} +
 
+
+      - name: Add London status widget
+        run: |
+          cp london-status.js _site/london-status.js
+          if ! grep -q 'london-status.js' _site/index.html; then
+            sed -i 's#</body>#<script src="/london-status.js" defer></script></body>#' _site/index.html
+          fi
+          test -s _site/london-status.js
       - name: Apply safe page cleanup
         run: |
           cp safe-page-cleanup.js _site/safe-page-cleanup.js

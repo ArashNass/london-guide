@@ -27,18 +27,18 @@
     75:"Heavy snow",80:"Rain showers",81:"Rain showers",82:"Heavy showers",
     95:"Thunderstorm",96:"Thunderstorm",99:"Thunderstorm"
   };
-  const weatherIcon = c => {
-    if (c===0||c===1) return "&#9728;&#65039;";
-    if (c===2||c===3) return "&#9925;";
-    if (c<=48) return "&#127787;&#65039;";
-    if (c<=55) return "&#127746;";
-    if (c<=65) return "&#127783;&#65039;";
-    if (c<=75) return "&#127784;&#65039;";
-    if (c<=82) return "&#127783;&#65039;";
-    return "&#9928;&#65039;";
+  const weatherIcon = function(c) {
+    if (c===0||c===1) return "\u2600\uFE0F";
+    if (c===2||c===3) return "\u26C5";
+    if (c<=48) return "\uD83C\uDF2B\uFE0F";
+    if (c<=55) return "\uD83C\uDF26\uFE0F";
+    if (c<=65) return "\uD83C\uDF27\uFE0F";
+    if (c<=75) return "\uD83C\uDF28\uFE0F";
+    if (c<=82) return "\uD83C\uDF27\uFE0F";
+    return "\u26C8\uFE0F";
   };
 
-  const wrap = document.createElement("section");
+  const wrap = document.createElement("div");
   wrap.dataset.londonStatus = "";
   wrap.setAttribute("aria-label", "London status");
   wrap.innerHTML =
@@ -62,7 +62,7 @@
 
   const style = document.createElement("style");
   style.textContent =
-    "[data-london-status]{padding:clamp(28px,5vw,52px) clamp(16px,5vw,40px);border-top:1px solid rgba(21,24,29,.1);margin-top:clamp(20px,4vw,48px)}" +
+    "[data-london-status]{display:block!important;padding:clamp(28px,5vw,52px) clamp(16px,5vw,40px);border-top:1px solid rgba(21,24,29,.1);background:#f7f4ee}" +
     ".ls-inner{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:200px 1fr;gap:clamp(24px,5vw,64px);align-items:start}" +
     ".ls-weather{display:flex;flex-direction:column;gap:8px}" +
     ".ls-weather__icon{font-size:48px;line-height:1}" +
@@ -83,12 +83,10 @@
   document.head.appendChild(style);
 
   function insert() {
-    const gridTile = Array.from(document.querySelectorAll("a.category-tile"))
-      .find(function(t){ return !t.closest(".landing-featured-slot"); });
-    const section = gridTile && (gridTile.closest("section") || gridTile.parentElement);
-    if (section) { section.insertAdjacentElement("afterend", wrap); return; }
-    const main = document.querySelector("main");
-    if (main) main.appendChild(wrap);
+    // Insert just before the footer — outside <main>, avoids any site.css main-child rules
+    var footer = document.querySelector("footer");
+    if (footer) { footer.insertAdjacentElement("beforebegin", wrap); return; }
+    document.body.appendChild(wrap);
   }
 
   if (document.readyState === "loading") {
@@ -99,10 +97,10 @@
 
   async function loadWeather() {
     try {
-      const r = await fetch("https://api.open-meteo.com/v1/forecast?latitude=51.5072&longitude=-0.1276&current=temperature_2m,apparent_temperature,weather_code&timezone=Europe%2FLondon", {cache:"no-store"});
-      const d = await r.json();
-      const code = d.current.weather_code;
-      wrap.querySelector("[data-ls-icon]").innerHTML = weatherIcon(code);
+      var r = await fetch("https://api.open-meteo.com/v1/forecast?latitude=51.5072&longitude=-0.1276&current=temperature_2m,apparent_temperature,weather_code&timezone=Europe%2FLondon", {cache:"no-store"});
+      var d = await r.json();
+      var code = d.current.weather_code;
+      wrap.querySelector("[data-ls-icon]").textContent = weatherIcon(code);
       wrap.querySelector("[data-ls-temp]").textContent = Math.round(d.current.temperature_2m) + "\u00b0C";
       wrap.querySelector("[data-ls-desc]").textContent = (weatherLabels[code] || "") + " \u00b7 Feels " + Math.round(d.current.apparent_temperature) + "\u00b0C";
     } catch(e) {
@@ -111,19 +109,19 @@
   }
 
   async function loadTfl() {
-    const grid = wrap.querySelector("[data-ls-grid]");
-    const summary = wrap.querySelector("[data-ls-summary]");
+    var grid = wrap.querySelector("[data-ls-grid]");
+    var summary = wrap.querySelector("[data-ls-summary]");
     try {
-      const r = await fetch("https://api.tfl.gov.uk/Line/Mode/tube,dlr,overground,elizabeth-line/Status", {cache:"no-store"});
-      const lines = await r.json();
-      const byId = {};
+      var r = await fetch("https://api.tfl.gov.uk/Line/Mode/tube,dlr,overground,elizabeth-line/Status", {cache:"no-store"});
+      var lines = await r.json();
+      var byId = {};
       lines.forEach(function(l){ byId[l.id] = l; });
-      let disrupted = 0;
+      var disrupted = 0;
       grid.innerHTML = LINES.map(function(meta) {
-        const line = byId[meta.id];
-        const good = !line || (line.lineStatuses || []).every(function(s){ return s.statusSeverity === 10; });
+        var line = byId[meta.id];
+        var good = !line || (line.lineStatuses||[]).every(function(s){ return s.statusSeverity === 10; });
         if (!good) disrupted++;
-        const tip = (line && line.lineStatuses && line.lineStatuses[0] && line.lineStatuses[0].statusSeverityDescription) || "Good service";
+        var tip = (line && line.lineStatuses && line.lineStatuses[0] && line.lineStatuses[0].statusSeverityDescription) || "Good service";
         return '<div class="ls-line" title="' + tip + '">' +
           '<span class="ls-line__dot" style="background:' + meta.color + '"></span>' +
           '<span class="ls-line__name">' + meta.name + '</span>' +
@@ -133,7 +131,6 @@
       summary.textContent = disrupted === 0 ? "Good service on all lines" : disrupted + " line" + (disrupted > 1 ? "s" : "") + " with disruption";
     } catch(e) {
       summary.textContent = "Status unavailable";
-      grid.innerHTML = "";
     }
   }
 

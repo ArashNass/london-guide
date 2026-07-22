@@ -17,13 +17,10 @@
     .landing-card-grid{position:relative}
     .landing-card-grid .category-tile.fly-in,.landing-featured-slot .category-tile.fly-in{opacity:0;transform:translateY(40px);animation:flyIn .5s ease-out forwards;animation-delay:calc(var(--i) * .08s);will-change:opacity,transform}
     .landing-card-grid.fly-complete .category-tile,.landing-featured-slot.fly-complete .category-tile{opacity:1;transform:none;animation:none;will-change:auto}
-    .landing-live-anchor{max-width:1180px;margin:clamp(30px,5vw,72px) auto 0;padding:0 0 clamp(24px,5vw,56px)}
-    .landing-live-anchor>.london-now{margin:0 auto!important}
     @keyframes flyIn{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
     @media(max-width:760px){
       .landing-hero{display:block!important;padding-top:42px!important;padding-bottom:30px!important}
       .landing-featured-slot{display:none}
-      .landing-live-anchor{padding-left:16px;padding-right:16px}
     }
     @media(prefers-reduced-motion:reduce){
       .landing-card-grid .category-tile.fly-in,.landing-featured-slot .category-tile.fly-in{opacity:1!important;transform:none!important;animation:none!important;will-change:auto!important}
@@ -36,8 +33,6 @@
     return heading?.closest("section,header,.hero") || heading?.parentElement || null;
   };
 
-  // Skip the tile that was moved into the hero featured slot — its closest("section")
-  // would return the hero, not the card grid, placing the live anchor in the wrong spot.
   const findCardSection = () => {
     const gridTile = Array.from(document.querySelectorAll("a.category-tile"))
       .find(t => !t.closest(".landing-featured-slot"));
@@ -90,20 +85,6 @@
     }
   };
 
-  const moveLivePanel = () => {
-    const panel = document.querySelector("[data-london-now]");
-    const cardSection = findCardSection();
-    if (!panel || !cardSection) return false;
-    let anchor = document.querySelector(".landing-live-anchor");
-    if (!anchor) {
-      anchor = document.createElement("div");
-      anchor.className = "landing-live-anchor";
-      cardSection.insertAdjacentElement("afterend", anchor);
-    }
-    if (panel.parentElement !== anchor) anchor.appendChild(panel);
-    return true;
-  };
-
   const enhance = () => {
     const hero = findHero();
     const grid = findCardSection();
@@ -153,7 +134,6 @@
       }
     }
 
-    moveLivePanel();
     return true;
   };
 
@@ -164,8 +144,4 @@
     observer.observe(document.documentElement, {childList:true, subtree:true});
     window.setTimeout(() => observer.disconnect(), 8000);
   }
-
-  const liveObserver = new MutationObserver(moveLivePanel);
-  liveObserver.observe(document.documentElement, {childList:true, subtree:true});
-  window.setTimeout(() => liveObserver.disconnect(), 10000);
 })();

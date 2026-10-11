@@ -69,6 +69,20 @@ PHOTO_LOADER = r'''(() => {
 
   observer.observe(document.documentElement, { childList: true, subtree: true });
   scan();
+
+  // Some images fail before a handler can be attached. After the page has settled, hide any
+  // photo that ended up unloadable (complete but zero-width) instead of showing a broken-image icon.
+  function sweepBroken() {
+    document.querySelectorAll(selector).forEach(image => {
+      if (image instanceof HTMLImageElement && image.getAttribute("src") && image.complete && image.naturalWidth === 0) {
+        image.style.display = "none";
+      }
+    });
+  }
+  window.addEventListener("load", () => {
+    setTimeout(sweepBroken, 1500);
+    setTimeout(sweepBroken, 6000);
+  });
 })();
 '''
 

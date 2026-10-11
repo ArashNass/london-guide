@@ -34,12 +34,19 @@ PHOTO_LOADER = r'''(() => {
     image.decoding = "async";
     image.style.opacity = "1";
 
+    // An image that cannot be loaded at all (for example a photo deleted from the original
+    // Google Site) is hidden instead of showing a broken-image icon over the tile.
+    const hideBroken = () => { image.onerror = null; image.style.display = "none"; };
+
     const wrapper = image.currentSrc || image.src;
     const direct = directGoogleUrl(wrapper);
-    if (!direct || direct === wrapper) return;
+    if (!direct || direct === wrapper) {
+      image.onerror = hideBroken;
+      return;
+    }
 
     image.onerror = () => {
-      image.onerror = null;
+      image.onerror = hideBroken;
       image.src = wrapper;
       image.style.opacity = "1";
     };

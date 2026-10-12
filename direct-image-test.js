@@ -91,6 +91,7 @@
     applyPhoto("Circolo Popolare", "/images/fde7e35fc725aeb1c6f2f906a184413c.jpg");
     applyPhoto("Gloria", "/images/feff9e6fa96d77c9622af0fe3abae913.jpg");
     applyPhoto("The Soho Social", "/images/soho-social.jpg", ["Soho Social"]);
+    applyPhoto("Caravan King’s Cross", "/images/caravan-kings-cross.jpg", ["Caravan King's Cross", "Caravan Kings Cross"]);
   }
 
   function applyShopping() {

@@ -48,7 +48,6 @@
   }
 
   function applySoulPhotos() {
-    applyPhoto("F1 Exhibition", "/images/8ff9674219704d66c64661d38e528f3f.jpg");
     applyPhoto("Lift 109", "/images/0d7e295df686fe1e8fe1ddf003a41794.jpg");
     applyPhoto("V&A Museum", "/images/182e732c1dbeb2ffc60b3a48e3bc7729.jpg", ["V&A"]);
     applyPhoto("The Monument", "/images/188ba73c4da2e2f545270b50b5a01330.jpg");

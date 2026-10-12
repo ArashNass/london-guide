@@ -65,6 +65,9 @@ jobs:
           grep -q 'Pint Stops' _site/pubs/index.html
           grep -q 'App Arsenal' _site/apps/index.html
 
+      - name: Swap F1 Exhibition for Cutty Sark
+        run: python scripts/swap_f1_for_cutty_sark.py _site
+
       - name: Enable existing site photos
         run: |
           python scripts/cache_google_site_images.py _site

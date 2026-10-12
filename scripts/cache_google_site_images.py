@@ -27,6 +27,19 @@ PHOTO_LOADER = r'''(() => {
     }
   }
 
+  // A photo that is gone for good leaves a tidy placeholder tile (soft gradient and a plate-and-cutlery
+  // mark) instead of an empty box.
+  const style = document.createElement("style");
+  style.textContent = ".card-media.no-photo{position:relative;background:linear-gradient(135deg,#efe6d6,#e2d3bb 55%,#d8c3a2)!important}" +
+    ".card-media.no-photo::after{content:'';position:absolute;inset:0;margin:auto;width:44px;height:44px;opacity:.5;" +
+    "background:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a6a3b' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='5'/%3E%3Cpath d='M3 3v7a2 2 0 0 0 2 2v9M7 3v7M21 3c-2 1-3 4-3 7a2 2 0 0 0 2 2v9'/%3E%3C/svg%3E\") center/contain no-repeat}";
+  document.head.appendChild(style);
+  function noPhoto(image) {
+    image.style.display = "none";
+    const box = image.closest(".card-media, .modal-media");
+    if (box) box.classList.add("no-photo");
+  }
+
   function prepare(image) {
     if (!(image instanceof HTMLImageElement) || image.dataset.originalPhotoReady === "1") return;
     image.dataset.originalPhotoReady = "1";
@@ -36,7 +49,7 @@ PHOTO_LOADER = r'''(() => {
 
     // An image that cannot be loaded at all (for example a photo deleted from the original
     // Google Site) is hidden instead of showing a broken-image icon over the tile.
-    const hideBroken = () => { image.onerror = null; image.style.display = "none"; };
+    const hideBroken = () => { image.onerror = null; noPhoto(image); };
 
     const wrapper = image.currentSrc || image.src;
     const direct = directGoogleUrl(wrapper);
@@ -75,7 +88,7 @@ PHOTO_LOADER = r'''(() => {
   function sweepBroken() {
     document.querySelectorAll(selector).forEach(image => {
       if (image instanceof HTMLImageElement && image.getAttribute("src") && image.complete && image.naturalWidth === 0) {
-        image.style.display = "none";
+        noPhoto(image);
       }
     });
   }

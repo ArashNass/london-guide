@@ -68,6 +68,9 @@ jobs:
       - name: Swap F1 Exhibition for Cutty Sark
         run: python scripts/swap_f1_for_cutty_sark.py _site
 
+      - name: Add official website links
+        run: python scripts/add_official_links.py _site
+
       - name: Enable existing site photos
         run: |
           python scripts/cache_google_site_images.py _site

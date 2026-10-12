@@ -7,7 +7,7 @@
   const isApps = path === "/apps/" || path === "/apps/index.html";
   const isPubs = path === "/pubs/" || path === "/pubs/index.html";
 
-  function applyPhoto(title, photo, alternatives = []) {
+  function applyPhoto(title, photo, alternatives = [], credit = "") {
     const titles = [title, ...alternatives];
     document.querySelectorAll("img").forEach((image) => {
       const card = image.closest("article, .card, .place-card, [data-id]");
@@ -18,6 +18,15 @@
       image.src = photo;
       image.classList.add("photo-loaded");
       image.style.opacity = "1";
+      const box = image.closest(".card-media");
+      if (credit && box && !box.querySelector(".photo-credit")) {
+        box.style.position = "relative";
+        const tag = document.createElement("span");
+        tag.className = "photo-credit";
+        tag.textContent = credit;
+        tag.style.cssText = "position:absolute;right:6px;bottom:6px;padding:2px 7px;border-radius:10px;font-size:10px;line-height:1.4;color:#fff;background:rgba(0,0,0,.55)";
+        box.appendChild(tag);
+      }
     });
   }
 
@@ -48,6 +57,7 @@
   }
 
   function applySoulPhotos() {
+    applyPhoto("Cutty Sark", "/images/cutty-sark.jpg", [], "Photo: Donnchadh H · CC BY 2.0");
     applyPhoto("Lift 109", "/images/0d7e295df686fe1e8fe1ddf003a41794.jpg");
     applyPhoto("V&A Museum", "/images/182e732c1dbeb2ffc60b3a48e3bc7729.jpg", ["V&A"]);
     applyPhoto("The Monument", "/images/188ba73c4da2e2f545270b50b5a01330.jpg");

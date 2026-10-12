@@ -90,6 +90,7 @@
     applyPhoto("Bergamot Café", "/images/e88d4e7e899a0363be3b345815f13822.jpg", ["Bergamot Cafe", "Bergamot"]);
     applyPhoto("Circolo Popolare", "/images/fde7e35fc725aeb1c6f2f906a184413c.jpg");
     applyPhoto("Gloria", "/images/feff9e6fa96d77c9622af0fe3abae913.jpg");
+    applyPhoto("The Soho Social", "/images/soho-social.jpg", ["Soho Social"]);
   }
 
   function applyShopping() {
